@@ -1,0 +1,31 @@
+{
+    "name": "jyphp/framework",
+    "description": "php framework",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Albert",
+            "email": "albert_p@foxmail.com"
+        }
+    ],
+    "autoload" : {
+        "files": [
+            "src/helpers.php"
+        ],
+        "psr-4": {
+            "JYPHP\\Core\\": "src/"
+        }
+    },
+    "minimum-stability": "dev",
+    "require": {
+        "php": ">=7.0",
+        "ext-mbstring": "*",
+        "ext-openssl": "*",
+        "illuminate/container": "5.4.*",
+        "illuminate/database": "5.4.*",
+        "illuminate/pipeline": "5.4.*",
+        "symfony/console": "3.2.*",
+        "symfony/http-foundation": "^3.2"
+    }
+}
