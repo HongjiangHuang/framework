@@ -14,7 +14,8 @@
             "src/helpers.php"
         ],
         "psr-4": {
-            "JYPHP\\Core\\": "src/"
+            "JYPHP\\Core\\": "src/",
+            "Tests\\": "tests/"
         }
     },
     "require": {
@@ -25,6 +26,7 @@
         "illuminate/database": "5.4.*",
         "illuminate/pipeline": "5.4.*",
         "symfony/console": "3.2.*",
-        "symfony/http-foundation": "^3.2"
+        "symfony/http-foundation": "^3.2",
+        "phpunit/phpunit": "^6.1"
     }
 }
