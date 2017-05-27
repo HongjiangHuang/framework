@@ -8,11 +8,13 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core;
 
 use Illuminate\Container\Container;
 use Illuminate\Pipeline\PipelineServiceProvider;
 use Illuminate\Support\Arr;
+use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Http\Response;
 use JYPHP\Core\Interfaces\Application\IApplication;
@@ -58,6 +60,10 @@ class Application extends Container implements IApplication
      */
     protected $appPath;
 
+    /**
+     * 日志路径
+     * @var string
+     */
     protected $logFile;
 
     /**
@@ -71,21 +77,21 @@ class Application extends Container implements IApplication
      * @param  \Illuminate\Support\ServiceProvider $provider
      * @return void
      */
-    protected function markAsRegistered($provider)
+    protected function markAsRegistered(ServiceProvider $provider): void
     {
         $this->serviceProviders[] = $provider;
 
         $this->loadedProviders[get_class($provider)] = true;
     }
 
-    protected function registerBaseBindings()
+    protected function registerBaseBindings(): void
     {
         static::setInstance($this);
         $this->instance('app', $this);
         $this->instance(Container::class, $this);
     }
 
-    protected function registerBaseProvider()
+    protected function registerBaseProvider(): void
     {
         //$this->register(RoutingServiceProvider::class);
         //$this->register(FilesystemServiceProvider::class);
@@ -95,7 +101,7 @@ class Application extends Container implements IApplication
     /**
      * 注册核心类库别名
      */
-    public function registerCoreContainerAliases()
+    public function registerCoreContainerAliases(): void
     {
         $this->alias('app', IApplication::class);
     }
@@ -103,7 +109,7 @@ class Application extends Container implements IApplication
     /**
      * 初始化Eloquent ORM
      */
-    protected function initDb()
+    protected function initDb(): void
     {
         $db = new Db();
         $databases = require $this->configPath() . "/databases.php";
@@ -114,7 +120,7 @@ class Application extends Container implements IApplication
         $db->bootEloquent();
     }
 
-    public function __construct($basePath)
+    public function __construct(string $basePath)
     {
         $this->registerBaseBindings();
         $this->registerBaseProvider();
@@ -126,7 +132,7 @@ class Application extends Container implements IApplication
      * 返回程序版本号
      * @return string
      */
-    public function version()
+    public function version(): string
     {
         return $this->version;
     }
@@ -135,18 +141,18 @@ class Application extends Container implements IApplication
      * 返回应用根目录
      * @return mixed
      */
-    public function basePath()
+    public function basePath(): string
     {
         return $this->basePath;
     }
 
-    public function registerConfiguredProviders()
+    public function registerConfiguredProviders(): void
     {
         // TODO: Implement registerConfiguredProviders() method.
     }
 
 
-    public function register($provider, $options = [], $force = false)
+    public function register($provider, array $options = [], bool $force = false): ServiceProvider
     {
         if (($registered = $this->getProvider($provider)) && !$force)
             return $registered;
@@ -165,7 +171,7 @@ class Application extends Container implements IApplication
      * 批量注册模块
      * @param array $modules
      */
-    public function registerModules(array $modules)
+    public function registerModules(array $modules): void
     {
         foreach ($modules as $item)
             $this->register($item);
@@ -181,7 +187,7 @@ class Application extends Container implements IApplication
         });
     }
 
-    public function registerDeferredProvider($provider, $service = null)
+    public function registerDeferredProvider($provider, ?string $service = null): void
     {
         // TODO: Implement registerDeferredProvider() method.
     }
@@ -196,7 +202,7 @@ class Application extends Container implements IApplication
         return $this->configPath?:$this->basePath()."/config";
     }
 
-    public function resolveProviderClass(string $provider)
+    public function resolveProviderClass(string $provider): ServiceProvider
     {
         return new $provider($this);
     }

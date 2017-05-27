@@ -8,6 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core\Annotation;
 
 use JYPHP\Core\Interfaces\Application\IApplication;
@@ -35,7 +36,10 @@ class Annotation
         $this->app = $application;
     }
 
-    private function parserFilter($filter_metadata)
+    /**
+     * @param $filter_metadata
+     */
+    private function parserFilter(string $filter_metadata): void
     {
         //@validate user_id require
         $filter_metadata = str_replace('@', '',rtrim($filter_metadata));
@@ -49,13 +53,17 @@ class Annotation
      * @param $annotation
      * @return bool|array
      */
-    public function getFilter($annotation = null){
+    public function getFilter(string $annotation = null)
+    {
         if ($annotation === null)
             return $this->filter;
         return $this->filter[$annotation]??false;
     }
 
-    public function parser()
+    /**
+     * @return $this
+     */
+    public function parser(): self
     {
         if ($this->isParser) {
             return $this;
