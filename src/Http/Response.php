@@ -114,6 +114,7 @@ class Response
     public function send()
     {
         $this->header('Status',self::$HTTP_HEADERS[$this->status]);
+        $this->header("Content-Type",$this->contentType.";charset=".$this->charset);
         $this->response->status($this->status);
         return $this->response->end($this->content);
     }

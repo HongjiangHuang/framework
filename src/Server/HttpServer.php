@@ -46,7 +46,7 @@ class HttpServer implements IServer,IHttpServer
      * 因为swoole_server会一次性申请一大块内存用于存放每一个connection的信息。
      * @var int
      */
-    protected $max_conn = 1000;
+    protected $max_conn = 200;
 
     /**
      * 指定数据包分发策略。
