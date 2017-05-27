@@ -8,6 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core\Server;
 
 use JYPHP\Core\Http\Request;
@@ -17,8 +18,17 @@ use JYPHP\Core\Interfaces\Server\IServer;
 
 class HttpServer implements IServer,IHttpServer
 {
+    /**
+     * @var string
+     */
     protected $version = "JYPHP_SERVER 1.0 BETA";
+    /**
+     * @var string
+     */
     protected $default_host = "0.0.0.0";
+    /**
+     * @var string
+     */
     protected $default_port = "9999";
 
     /**
@@ -156,13 +166,13 @@ class HttpServer implements IServer,IHttpServer
         $response->send();
     }
 
-    public function setWorkNum(int $num)
+    public function setWorkNum(int $num): self
     {
         $this->work_num = $num;
         return $this;
     }
 
-    public function setRequestMax(int $max)
+    public function setRequestMax(int $max): self
     {
         $this->max_request = $max;
         return $this;
@@ -173,7 +183,7 @@ class HttpServer implements IServer,IHttpServer
 
     }
 
-    public function version()
+    public function version(): string
     {
         return $this->version;
     }

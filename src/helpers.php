@@ -8,19 +8,22 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-
+declare(strict_types=1);
 /**
  * 获得全局app对象
  */
+use Symfony\Component\HttpFoundation\Request;
+use Symfony\Component\HttpFoundation\Response;
+
 if (!function_exists("app")) {
 
     /**
      * 获取Application实例或make
-     * @param null $abstract
+     * @param null|string $abstract
      * @param array $parameters
-     * @return mixed|\JYPHP\Core\Application
+     * @return \JYPHP\Core\Application|mixed
      */
-    function app($abstract = null, array $parameters = [])
+    function app(?string $abstract = null, array $parameters = [])
     {
         if (is_null($abstract))
             return \JYPHP\Core\Application::getInstance();
@@ -36,7 +39,7 @@ if (!function_exists("app")) {
  * 获得全局response对象
  */
 if (!function_exists("response")) {
-    function response()
+    function response(): Response
     {
         return app()->make('response');
     }
@@ -46,7 +49,7 @@ if (!function_exists("response")) {
  * 获得全局request对象
  */
 if (!function_exists('request')) {
-    function request()
+    function request(): Request
     {
         return app()->make('request');
     }
