@@ -8,18 +8,22 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core\Traits;
 
 trait Instance
 {
+    /**
+     * @var self
+     */
     protected static $instance;
 
     /**
      * 生成实例
      * @param null $_arg
-     * @return static
+     * @return self
      */
-    public static function instance($_arg = null)
+    public static function instance($_arg = null): self
     {
         $params = func_get_args();
         if(empty(static::$instance))
@@ -30,9 +34,9 @@ trait Instance
     /**
      * 重新生成实例
      * @param null $_arg
-     * @return static
+     * @return self
      */
-    public static function create($_arg = null)
+    public static function create($_arg = null): self
     {
         static::$instance = null;
         return static::instance(...$_arg);

@@ -8,6 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core\Pipeline;
 
 class Pipeline extends \Illuminate\Pipeline\Pipeline

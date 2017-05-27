@@ -8,8 +8,10 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
+declare(strict_types=1);
 namespace JYPHP\Core\Interfaces\Application;
 
+use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Http\Response;
 
@@ -19,43 +21,43 @@ interface IApplication
      * 获取应用程序版本号
      * @return string
      */
-    public function version();
+    public function version(): string;
 
     /**
      * 获取父级目录
      * @return string
      */
-    public function basePath();
+    public function basePath(): string;
 
     /**
      * 配置目录
-     * @return mixed
+     * @return string
      */
-    public function configPath();
+    public function configPath(): string;
 
     /**
      * 存储目录
-     * @return mixed
+     * @return string
      */
-    public function storagePath();
+    public function storagePath(): string;
 
     /**
      * 应用程序目录
-     * @return mixed
+     * @return string
      */
-    public function appPath();
+    public function appPath(): string;
 
     /**
      * 日志文件
-     * @return mixed
+     * @return string
      */
-    public function logFile();
+    public function logFile(): string;
 
     /**
      * 资源目录
-     * @return mixed
+     * @return string
      */
-    public function resourcesPath();
+    public function resourcesPath(): string;
 
     public function handle(Request $request) : Response;
 
@@ -63,7 +65,7 @@ interface IApplication
      * Register all of the configured providers.
      * @return void
      */
-    public function registerConfiguredProviders();
+    public function registerConfiguredProviders(): void;
 
     /**
      * Register a service provider with the application.
@@ -72,7 +74,7 @@ interface IApplication
      * @param  bool   $force
      * @return \Illuminate\Support\ServiceProvider
      */
-    public function register($provider, $options = [], $force = false);
+    public function register($provider, array $options = [], bool $force = false): ServiceProvider;
 
     /**
      * Register a deferred provider and service.
@@ -80,5 +82,5 @@ interface IApplication
      * @param  string  $service
      * @return void
      */
-    public function registerDeferredProvider($provider, $service = null);
+    public function registerDeferredProvider($provider, ?string $service = null): void;
 }
