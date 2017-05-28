@@ -122,6 +122,7 @@ class Application extends Container implements IApplication
 
     public function __construct(string $basePath)
     {
+        $this->basePath = $basePath;
         $this->registerBaseBindings();
         $this->registerBaseProvider();
         $this->registerCoreContainerAliases();
