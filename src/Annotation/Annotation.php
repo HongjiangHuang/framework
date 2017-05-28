@@ -53,7 +53,7 @@ class Annotation
      * @param $annotation
      * @return bool|array
      */
-    public function getFilter(string $annotation = null)
+    public function getFilter(?string $annotation = null)
     {
         if ($annotation === null)
             return $this->filter;
