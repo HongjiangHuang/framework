@@ -28,5 +28,6 @@ class AppTest extends TestCase
     public function testNew()
     {
         $app = new Application('vfs://base');
+        $this->assertInstanceOf(Application::class,$app);
     }
 }
