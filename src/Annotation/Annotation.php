@@ -61,7 +61,7 @@ class Annotation
     }
 
     /**
-     * @return $this
+     * @return self
      */
     public function parser(): self
     {
@@ -83,5 +83,4 @@ class Annotation
         }
         return $this;
     }
-
 }
