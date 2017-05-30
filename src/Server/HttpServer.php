@@ -25,11 +25,11 @@ class HttpServer implements IServer,IHttpServer
     /**
      * @var string
      */
-    protected $default_host = "0.0.0.0";
+    protected $defaultHost = "0.0.0.0";
     /**
      * @var string
      */
-    protected $default_port = "9999";
+    protected $defaultPort = 9999;
 
     /**
      * 指定启动的worker进程数。
@@ -39,7 +39,7 @@ class HttpServer implements IServer,IHttpServer
      * 因此建议开启的worker进程数为cpu核数的1-4倍。
      * @var int
      */
-    protected $work_num = 3;
+    protected $workNum = 3;
 
     /**
      * 每个worker进程允许处理的最大任务数。
@@ -47,7 +47,7 @@ class HttpServer implements IServer,IHttpServer
      * 设置该值的主要目的是为了防止worker进程处理大量请求后可能引起的内存溢出。
      * @var int
      */
-    protected $max_request = 1000;
+    protected $maxRequest = 1000;
 
     /**
      * 服务器允许维持的最大TCP连接数
@@ -56,7 +56,7 @@ class HttpServer implements IServer,IHttpServer
      * 因为swoole_server会一次性申请一大块内存用于存放每一个connection的信息。
      * @var int
      */
-    protected $max_conn = 200;
+    protected $maxConn = 200;
 
     /**
      * 指定数据包分发策略。
@@ -65,7 +65,7 @@ class HttpServer implements IServer,IHttpServer
      * 3 => 抢占模式，主进程会根据Worker的忙闲状态选择投递，只会投递给处于闲置状态的Worker
      * @var int
      */
-    protected $dispatch_mode = 2;
+    protected $dispatchMode = 2;
 
     /**
      * 设置程序进入后台作为守护进程运行。
@@ -77,12 +77,12 @@ class HttpServer implements IServer,IHttpServer
      * 上传文件时的临时目录
      * @var string
      */
-    protected $upload_tmp_dir;
+    protected $uploadTmpDir;
 
     /**
      * @var \swoole_http_server
      */
-    protected $swoole_server;
+    protected $swooleServer;
 
     /**
      * 服务器运行的应用程序
@@ -94,14 +94,14 @@ class HttpServer implements IServer,IHttpServer
      * 新建swoole http 服务器
      * @return \swoole_http_server
      */
-    private function create_server() : \swoole_http_server
+    protected function create_server() : \swoole_http_server
     {
-        $swoole_server = new \swoole_http_server($this->default_host,$this->default_port);
+        $swoole_server = new \swoole_http_server($this->defaultHost,$this->defaultPort);
         $configure = [
-            'worker_num' => $this->work_num,
-            'max_request' => $this->max_request,
-            'max_conn' => $this->max_conn,
-            'dispatch_mode' => $this->dispatch_mode,
+            'worker_num' => $this->workNum,
+            'max_request' => $this->maxRequest,
+            'max_conn' => $this->maxConn,
+            'dispatch_mode' => $this->dispatchMode,
             'debug_mode'=> 1,
             'daemonize' => $this->daemon,
             'heartbeat_check_interval' => 60
@@ -149,10 +149,10 @@ class HttpServer implements IServer,IHttpServer
         if(empty($swoole_server) || (!$swoole_server instanceof \swoole_http_server)){
             $swoole_server = $this->create_server();
         }
-        $this->swoole_server = $swoole_server;
-        $this->swoole_server->on('Request',[$this,'onRequest']);
-        $this->swoole_server->on('Close',[$this,'onClose']);
-        $this->swoole_server->start();
+        $this->swooleServer = $swoole_server;
+        $this->swooleServer->on('Request',[$this,'onRequest']);
+        $this->swooleServer->on('Close',[$this,'onClose']);
+        $this->swooleServer->start();
     }
 
     public function onRequest($req, $res)
@@ -168,13 +168,13 @@ class HttpServer implements IServer,IHttpServer
 
     public function setWorkNum(int $num): self
     {
-        $this->work_num = $num;
+        $this->workNum = $num;
         return $this;
     }
 
     public function setRequestMax(int $max): self
     {
-        $this->max_request = $max;
+        $this->maxRequest = $max;
         return $this;
     }
 

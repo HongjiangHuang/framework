@@ -34,12 +34,6 @@ class Response
     protected $response;
 
     /**
-     * 输出数据
-     * @var string
-     */
-    protected $content;
-
-    /**
      * 返回内容的格式
      * @var string
      */
@@ -57,6 +51,10 @@ class Response
      */
     protected $http_protocol = "HTTP/1.1";
 
+    /**
+     * 输出数据
+     * @var string
+     */
     protected $body;
 
     /**
@@ -96,6 +94,16 @@ class Response
     ];
 
     /**
+     * 处理输出数据
+     */
+    public function body() : void
+    {
+        if(is_array($this->data)){
+            $this->body = json_encode($this->data);
+        }
+    }
+
+    /**
      * @param string $name
      * @param array $arguments
      * @return mixed
@@ -118,7 +126,7 @@ class Response
     public function __construct(string $content = "", int $status = 200 , array $headers = [])
     {
         $this->response = app()->make("response");
-        $this->content = $content;
+        $this->data = $content;
         $this->status = $status;
         foreach($headers as $key => $item){
             $this->header($key,$item);
@@ -142,6 +150,6 @@ class Response
         $this->header('Status',self::$HTTP_HEADERS[$this->status]);
         $this->header("Content-Type",$this->contentType.";charset=".$this->charset);
         $this->response->status($this->status);
-        return $this->response->end($this->content);
+        return $this->response->end($this->body);
     }
 }
