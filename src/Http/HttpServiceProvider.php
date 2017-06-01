@@ -8,15 +8,17 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Http;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use Illuminate\Support\ServiceProvider;
+use JYPHP\Core\Interfaces\Http\IHttpKernel;
+use JYPHP\Core\Interfaces\Http\IResponse;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+class HttpServiceProvider extends ServiceProvider
 {
-    public function __construct(IApplication $application = null)
+    public function register()
     {
-        parent::__construct($application);
+        $this->app->bind(IHttpKernel::class,HttpKernel::class);
+        $this->app->bind(IResponse::class,Response::class);
     }
 }

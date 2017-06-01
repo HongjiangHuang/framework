@@ -8,15 +8,16 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Filter;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use JYPHP\Core\Filter\Abstracts\FilterProvider;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+class FilterServiceProvider extends FilterProvider
 {
-    public function __construct(IApplication $application = null)
+
+    public function register()
     {
-        parent::__construct($application);
+        $this->bind("csrf",Csrf::class);
+        $this->bind("param",Param::class);
     }
 }

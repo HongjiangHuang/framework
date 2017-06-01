@@ -8,15 +8,29 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use Illuminate\Support\ServiceProvider;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+abstract class Module extends ServiceProvider
 {
-    public function __construct(IApplication $application = null)
+    public static function description(): string
     {
-        parent::__construct($application);
+        return "erp模块";
+    }
+
+    public static function name(): string
+    {
+        return "erp";
+    }
+
+    public static function version(): string
+    {
+        return "1.0 beta";
+    }
+
+    public static function author(): string
+    {
+        return "Albert";
     }
 }

@@ -8,15 +8,11 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Filter\Abstracts;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use JYPHP\Core\Http\Request;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+abstract class Filter
 {
-    public function __construct(IApplication $application = null)
-    {
-        parent::__construct($application);
-    }
+    abstract public function handle(Request $request, \Closure $next, ...$params);
 }

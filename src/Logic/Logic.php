@@ -8,15 +8,11 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Logic;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use JYPHP\Core\Http\Response;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+abstract class Logic
 {
-    public function __construct(IApplication $application = null)
-    {
-        parent::__construct($application);
-    }
+    abstract public function toResponse() : Response;
 }

@@ -8,17 +8,22 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace JYPHP\Core;
 
 use Illuminate\Container\Container;
-use Illuminate\Pipeline\PipelineServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
+use JYPHP\Core\Config\Config;
+use JYPHP\Core\Config\ConfigServiceProvider;
+use JYPHP\Core\Filter\FilterServiceProvider;
+use JYPHP\Core\Http\HttpServiceProvider;
 use JYPHP\Core\Http\Request;
-use JYPHP\Core\Http\Response;
 use JYPHP\Core\Interfaces\Application\IApplication;
 use Illuminate\Database\Capsule\Manager as Db;
+use JYPHP\Core\Interfaces\Http\IHttpKernel;
+use JYPHP\Core\Interfaces\Http\IResponse;
+use JYPHP\Core\Pipeline\PipelineServiceProvider;
 
 class Application extends Container implements IApplication
 {
@@ -91,11 +96,32 @@ class Application extends Container implements IApplication
         $this->instance(Container::class, $this);
     }
 
+    /**
+     * 初始化所有配置
+     */
+    protected function initConfig()
+    {
+        if (!is_dir($path = $this->configPath())) {
+            throw new \Exception("目录" . $this->configPath() . "不存在");
+        }
+        $dir = opendir($path);
+        while (($file = readdir($dir)) !== false) {
+            if (preg_match("/.php$/", $file)) {
+                $file_path = $this->configPath() . "/" . $file;
+                $namespace = str_replace(".php", "", $file);
+                Config::load(require($file_path), $namespace);
+            }
+        }
+    }
+
     protected function registerBaseProvider(): void
     {
         //$this->register(RoutingServiceProvider::class);
         //$this->register(FilesystemServiceProvider::class);
         $this->register(PipelineServiceProvider::class);
+        $this->register(HttpServiceProvider::class);
+        $this->register(ConfigServiceProvider::class);
+        $this->register(FilterServiceProvider::class);
     }
 
     /**
@@ -112,7 +138,7 @@ class Application extends Container implements IApplication
     protected function initDb(): void
     {
         $db = new Db();
-        $databases = require $this->configPath() . "/databases.php";
+        $databases = $this->makeWith('config', ['namespace' => 'databases']);
         foreach ($databases as $name => $config) {
             $db->addConnection($config, $name);
         }
@@ -122,6 +148,8 @@ class Application extends Container implements IApplication
 
     public function __construct(string $basePath)
     {
+        $this->basePath = $basePath;
+        $this->initConfig();
         $this->registerBaseBindings();
         $this->registerBaseProvider();
         $this->registerCoreContainerAliases();
@@ -151,7 +179,6 @@ class Application extends Container implements IApplication
         // TODO: Implement registerConfiguredProviders() method.
     }
 
-
     public function register($provider, array $options = [], bool $force = false): ServiceProvider
     {
         if (($registered = $this->getProvider($provider)) && !$force)
@@ -177,7 +204,6 @@ class Application extends Container implements IApplication
             $this->register($item);
     }
 
-
     public function getProvider($provider)
     {
         $name = is_string($provider) ? $provider : get_class($provider);
@@ -192,14 +218,18 @@ class Application extends Container implements IApplication
         // TODO: Implement registerDeferredProvider() method.
     }
 
-    public function handle(Request $request) : Response
+    /**
+     * @param Request $request
+     * @return IResponse
+     */
+    public function handle(Request $request): IResponse
     {
-        return new Response("哈哈哈");
+        return app()->make(IHttpKernel::class)->handle($request);
     }
 
-    public function configPath() : string
+    public function configPath(): string
     {
-        return $this->configPath?:$this->basePath()."/config";
+        return $this->configPath ?: $this->basePath() . "/config";
     }
 
     public function resolveProviderClass(string $provider): ServiceProvider
@@ -212,35 +242,35 @@ class Application extends Container implements IApplication
      * 获得存储目录路径
      * @return string
      */
-    public function storagePath() : string
+    public function storagePath(): string
     {
-        return $this->storagePath?:$this->basePath()."/storage";
+        return $this->storagePath ?: $this->basePath() . "/storage";
     }
 
     /**
      * return app path
      * @return string
      */
-    public function appPath() : string
+    public function appPath(): string
     {
-        return $this->appPath?:$this->basePath()."/app";
+        return $this->appPath ?: $this->basePath() . "/app";
     }
 
     /**
      * 获得资源路径
      * @return string
      */
-    public function resourcesPath() : string
+    public function resourcesPath(): string
     {
-        return $this->resourcesPath?:$this->basePath()."/resources";
+        return $this->resourcesPath ?: $this->basePath() . "/resources";
     }
 
     /**
      * 日志文件
      * @return string
      */
-    public function logFile() : string
+    public function logFile(): string
     {
-        return $this->logFile?:$this->basePath()."/runtime.log";
+        return $this->logFile ?: $this->basePath() . "/runtime.log";
     }
 }

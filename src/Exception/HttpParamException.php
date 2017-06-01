@@ -8,15 +8,14 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Exception;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use Exception;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+class HttpParamException extends HttpException
 {
-    public function __construct(IApplication $application = null)
+    public function __construct($message = "", Exception $previous = null)
     {
-        parent::__construct($application);
+        parent::__construct("缺少请求参数".$message."", 500 , $previous);
     }
 }

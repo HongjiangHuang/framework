@@ -8,12 +8,12 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 /**
  * 获得全局app对象
  */
 use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use \JYPHP\Core\Config\ConfigManage;
 
 if (!function_exists("app")) {
 
@@ -39,7 +39,7 @@ if (!function_exists("app")) {
  * 获得全局response对象
  */
 if (!function_exists("response")) {
-    function response(): Response
+    function response(): \Swoole\Http\Response
     {
         return app()->make('response');
     }
@@ -52,5 +52,15 @@ if (!function_exists('request')) {
     function request(): Request
     {
         return app()->make('request');
+    }
+}
+
+/**
+ * 获得ConfigManage
+ */
+if (!function_exists('config')) {
+    function config($namespace = 'app') : ConfigManage
+    {
+        return app()->makeWith('config',['namespace' => $namespace]);
     }
 }

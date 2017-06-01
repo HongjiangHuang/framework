@@ -14,6 +14,7 @@ namespace JYPHP\Core\Interfaces\Application;
 use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Http\Response;
+use JYPHP\Core\Interfaces\Http\IResponse;
 
 interface IApplication
 {
@@ -59,7 +60,7 @@ interface IApplication
      */
     public function resourcesPath(): string;
 
-    public function handle(Request $request) : Response;
+    public function handle(Request $request) : IResponse;
 
     /**
      * Register all of the configured providers.
