@@ -15,6 +15,7 @@ use Illuminate\Support\Arr;
 use JYPHP\Core\Annotation\Annotation;
 use JYPHP\Core\Controller;
 use JYPHP\Core\Exception\HttpException;
+use JYPHP\Core\Exception\HttpParamException;
 use JYPHP\Core\Filter\Abstracts\FilterProvider;
 use JYPHP\Core\Interfaces\Http\IHttpKernel;
 use JYPHP\Core\Interfaces\Http\IResponse;
@@ -126,20 +127,17 @@ class HttpKernel implements IHttpKernel
     {
         $controller = $this->controller;
         $action = $this->action;
-        if (!method_exists($controller, $action)) {
-            return false;
+        if (!method_exists($controller,$action)){
+            $action = "missMethod";
         }
         $reflection = new \ReflectionMethod($controller, $action);
         $annotation = new Annotation($reflection->getDocComment(), app());
         $params = $reflection->getParameters();
-        var_dump($params);
         foreach ($params as $param) {
-            $v = [];
-            $v[$param->name] = $this->request->get($param->name);
-            if (is_null($v[$param->name]) && !$param->isDefaultValueAvailable()){
-                throw new HttpException();
+            if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
+                throw new HttpParamException($param->name);
             }
-            $this->params[] = $v;
+            $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
         }
         $annotation->parser();
         $pipeline = app()->make('pipeline');
@@ -150,8 +148,9 @@ class HttpKernel implements IHttpKernel
                     $filters[] = $filter . ":" . $param;
             }
         }
+        var_dump($this->params);
         return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action) {
-            return app()->call([$controller, $action], $this->params , "missMethod");
+            return app()->call([$controller, $action], $this->params);
         });
     }
 
@@ -177,7 +176,7 @@ class HttpKernel implements IHttpKernel
             if (config()->get('debug', false) === false) {
                 return app()->makeWith(IResponse::class, ["content" => "程序错误", 'status' => 500]);
             }
-            return app()->makeWith(IResponse::class, ["content" => $http_exception->getMessage() . $http_exception->getFile() . $http_exception->getLine()]);
+            return $controller->dealWithError($http_exception);
         }
     }
 }

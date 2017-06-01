@@ -101,15 +101,13 @@ class Response implements IResponse
     {
         if (is_array($this->data)) {
             $this->body = json_encode($this->data);
-        }
-        if (is_object($this->data)) {
+        } else if (is_object($this->data)) {
             if (is_callable($this->data, "__toString")) {
                 $this->body = (string)$this->data;
             } else {
                 throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($this->data)));
             }
-        }
-        if (is_string($this->data)) {
+        }else if (is_string($this->data)) {
             $this->body = $this->data;
         } else {
             $this->body = (string)$this->data;
@@ -133,11 +131,11 @@ class Response implements IResponse
 
     /**
      * Response constructor.
-     * @param string $content
+     * @param string|array|\ArrayAccess $content
      * @param int $status
      * @param array $headers
      */
-    public function __construct(string $content = "", int $status = 200, array $headers = [])
+    public function __construct($content = "", int $status = 200, array $headers = [])
     {
         $this->response = app()->make("response");
         $this->data = $content;

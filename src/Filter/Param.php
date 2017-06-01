@@ -50,7 +50,7 @@ class Param extends Filter
 //        if ($this->validate === false) {
 //
 //        }
-        throw new HttpException("参数" . $this->field . "未通过验证", "500");
+        //throw new HttpException("参数" . $this->field . "未通过验证", "500");
         return $next($request);
     }
 }
