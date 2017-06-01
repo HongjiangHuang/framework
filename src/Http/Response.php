@@ -8,13 +8,14 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace JYPHP\Core\Http;
 
 
 use JYPHP\Core\Exception\JyException;
+use JYPHP\Core\Interfaces\Http\IResponse;
 
-class Response
+class Response implements IResponse
 {
     /**
      * HTTP 状态码
@@ -43,7 +44,7 @@ class Response
      * 编码
      * @var string
      */
-    protected $charset = "ust-8";
+    protected $charset = "utf-8";
 
     /**
      * 使用的http协议版本
@@ -96,11 +97,24 @@ class Response
     /**
      * 处理输出数据
      */
-    public function body() : void
+    public function body() : self
     {
-        if(is_array($this->data)){
+        if (is_array($this->data)) {
             $this->body = json_encode($this->data);
         }
+        if (is_object($this->data)) {
+            if (is_callable($this->data, "__toString")) {
+                $this->body = (string)$this->data;
+            } else {
+                throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($this->data)));
+            }
+        }
+        if (is_string($this->data)) {
+            $this->body = $this->data;
+        } else {
+            $this->body = (string)$this->data;
+        }
+        return $this;
     }
 
     /**
@@ -123,13 +137,14 @@ class Response
      * @param int $status
      * @param array $headers
      */
-    public function __construct(string $content = "", int $status = 200 , array $headers = [])
+    public function __construct(string $content = "", int $status = 200, array $headers = [])
     {
         $this->response = app()->make("response");
         $this->data = $content;
+        $this->body();
         $this->status = $status;
-        foreach($headers as $key => $item){
-            $this->header($key,$item);
+        foreach ($headers as $key => $item) {
+            $this->header($key, $item);
         }
     }
 
@@ -147,9 +162,39 @@ class Response
      */
     public function send()
     {
-        $this->header('Status',self::$HTTP_HEADERS[$this->status]);
-        $this->header("Content-Type",$this->contentType.";charset=".$this->charset);
+        $this->header('Status', self::$HTTP_HEADERS[$this->status]);
+        $this->header("Content-Type", $this->contentType . ";charset=" . $this->charset);
         $this->response->status($this->status);
         return $this->response->end($this->body);
+    }
+
+    public function header(string $header_string, string $header_value)
+    {
+        return $this->response->header($header_string,$header_value);
+    }
+
+    public function cookie(string $key, string $value = "", int $expire = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false)
+    {
+        return $this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly);
+    }
+
+    public function status(int $http_status_code)
+    {
+        return $this->response->status($http_status_code);
+    }
+
+    public function gzip(int $level = 1)
+    {
+        return $this->response->gzip($level);
+    }
+
+    public function write(string $data): bool
+    {
+        return $this->response->write($data);
+    }
+
+    public function sendfile(string $filename, int $offset = 0, int $length = 0)
+    {
+        return $this->response->sendfile($filename,$offset,$length);
     }
 }

@@ -12,14 +12,18 @@ declare(strict_types = 1);
 namespace JYPHP\Core;
 
 use Illuminate\Container\Container;
-use Illuminate\Pipeline\PipelineServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Config\Config;
+use JYPHP\Core\Config\ConfigServiceProvider;
+use JYPHP\Core\Filter\FilterServiceProvider;
+use JYPHP\Core\Http\HttpServiceProvider;
 use JYPHP\Core\Http\Request;
-use JYPHP\Core\Http\Response;
 use JYPHP\Core\Interfaces\Application\IApplication;
 use Illuminate\Database\Capsule\Manager as Db;
+use JYPHP\Core\Interfaces\Http\IHttpKernel;
+use JYPHP\Core\Interfaces\Http\IResponse;
+use JYPHP\Core\Pipeline\PipelineServiceProvider;
 
 class Application extends Container implements IApplication
 {
@@ -103,9 +107,9 @@ class Application extends Container implements IApplication
         $dir = opendir($path);
         while (($file = readdir($dir)) !== false) {
             if (preg_match("/.php$/", $file)) {
-                $file_path = $this->configPath()."/".$file;
-                $namespace = str_replace(".php","",$file);
-                Config::load(require ($file_path),$namespace);
+                $file_path = $this->configPath() . "/" . $file;
+                $namespace = str_replace(".php", "", $file);
+                Config::load(require($file_path), $namespace);
             }
         }
     }
@@ -115,6 +119,9 @@ class Application extends Container implements IApplication
         //$this->register(RoutingServiceProvider::class);
         //$this->register(FilesystemServiceProvider::class);
         $this->register(PipelineServiceProvider::class);
+        $this->register(HttpServiceProvider::class);
+        $this->register(ConfigServiceProvider::class);
+        $this->register(FilterServiceProvider::class);
     }
 
     /**
@@ -131,7 +138,7 @@ class Application extends Container implements IApplication
     protected function initDb(): void
     {
         $db = new Db();
-        $databases = require $this->configPath() . "/databases.php";
+        $databases = $this->makeWith('config', ['namespace' => 'databases']);
         foreach ($databases as $name => $config) {
             $db->addConnection($config, $name);
         }
@@ -142,11 +149,11 @@ class Application extends Container implements IApplication
     public function __construct(string $basePath)
     {
         $this->basePath = $basePath;
+        $this->initConfig();
         $this->registerBaseBindings();
         $this->registerBaseProvider();
         $this->registerCoreContainerAliases();
         $this->initDb();
-        $this->initConfig();
     }
 
     /**
@@ -171,7 +178,6 @@ class Application extends Container implements IApplication
     {
         // TODO: Implement registerConfiguredProviders() method.
     }
-
 
     public function register($provider, array $options = [], bool $force = false): ServiceProvider
     {
@@ -198,7 +204,6 @@ class Application extends Container implements IApplication
             $this->register($item);
     }
 
-
     public function getProvider($provider)
     {
         $name = is_string($provider) ? $provider : get_class($provider);
@@ -213,9 +218,13 @@ class Application extends Container implements IApplication
         // TODO: Implement registerDeferredProvider() method.
     }
 
-    public function handle(Request $request): Response
+    /**
+     * @param Request $request
+     * @return IResponse
+     */
+    public function handle(Request $request): IResponse
     {
-        return new Response("哈哈哈");
+        return app()->make(IHttpKernel::class)->handle($request);
     }
 
     public function configPath(): string

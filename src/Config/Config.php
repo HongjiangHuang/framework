@@ -14,13 +14,13 @@ namespace JYPHP\Core\Config;
 use Illuminate\Support\Arr;
 
 /**
- * 配置管理类
+ * 配置核心类
  * @package JYPHP\Core\Config
  */
 class Config
 {
     /**
-     * 配置
+     * 所有配置
      * @var array
      */
     protected static $config = [];
@@ -48,7 +48,7 @@ class Config
         //self::setNamespace($namespace);
         return self::$config[$namespace] =
             array_merge(
-                (self::$config[$namespace] ?: [])
+                !empty(self::$config[$namespace]) ?self::$config[$namespace]: []
                 ,
                 $config
             );
@@ -69,11 +69,14 @@ class Config
      * 获取配置
      * @param string $key
      * @param string $default
+     * @param $namespace
      * @return string
      */
-    public static function get(string $key, ?string $default = "")
+    public static function get(string $key, ?string $default = null,$namespace = null)
     {
-        return (self::$config[self::$namespace] ?: [])[$key] ?: $default;
+        self::setNamespace($namespace);
+        $config = self::$config[self::$namespace] ?: [];
+        return isset($config[$key]) ? $config[$key] : $default;
     }
 
     /**

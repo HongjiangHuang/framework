@@ -8,15 +8,14 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
 namespace JYPHP\Core\Pipeline;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use Illuminate\Support\ServiceProvider;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+class PipelineServiceProvider extends ServiceProvider
 {
-    public function __construct(IApplication $application = null)
+    public function register()
     {
-        parent::__construct($application);
+        $this->app->bind('pipeline',Pipeline::class);
     }
 }

@@ -8,15 +8,11 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Interfaces\Http;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use JYPHP\Core\Http\Request;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+interface IHttpKernel
 {
-    public function __construct(IApplication $application = null)
-    {
-        parent::__construct($application);
-    }
+    public function handle(Request $request) : IResponse;
 }

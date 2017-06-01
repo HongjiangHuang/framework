@@ -10,6 +10,8 @@
 // +----------------------------------------------------------------------
 namespace JYPHP\Core\Filter;
 
+use Illuminate\Support\Arr;
+use JYPHP\Core\Exception\HttpException;
 use JYPHP\Core\Filter\Abstracts\Filter;
 use JYPHP\Core\Http\Request;
 
@@ -22,35 +24,33 @@ class Param extends Filter
      */
     private $validate = true;
 
+    //private $data;
+
     /**
      * @var Request
      */
     private $request;
 
-    private function executeRule($i)
-    {
-        $rule = [
-            'require' => function () use ($i) {
-                return $this->request->get($i) === null ? false : true;
-            },
-        ];
-    }
-
-    private function parser($params)
-    {
-        $this->field = array_shift($params);
-        foreach ($params as $item) {
-            $this->executeRule($item);
-        }
-    }
+//    private function executeRule($i)
+//    {
+//        $rule = [
+//            'string' => function () use ($i) {
+//                return $this->request->get($i) === null ? false : true;
+//            },
+//            'int' => function () use ($i) {
+//                return $this->request->get($i) === null ? false : true;
+//            },
+//        ];
+//    }
 
     public function handle(Request $request, \Closure $next, ...$params)
     {
-        $this->request = $request;
-        $this->parser($params);
-        if ($this->validate === false){
-            throw new HttpException("参数".$this->field."未通过验证","500");
-        }
+//        $this->request = $request;
+//        $this->parser($params);
+//        if ($this->validate === false) {
+//
+//        }
+        throw new HttpException("参数" . $this->field . "未通过验证", "500");
         return $next($request);
     }
 }

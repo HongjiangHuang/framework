@@ -8,15 +8,18 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
-namespace JYPHP\Core\Pipeline;
+namespace JYPHP\Core\Filter;
 
-use JYPHP\Core\Interfaces\Application\IApplication;
+use JYPHP\Core\Filter\Abstracts\Filter;
+use JYPHP\Core\Http\Request;
 
-class Pipeline extends \Illuminate\Pipeline\Pipeline
+class Csrf extends Filter
 {
-    public function __construct(IApplication $application = null)
+
+    public function handle(Request $request, \Closure $next, ...$params)
     {
-        parent::__construct($application);
+        app()->make("response")->header("Access-Control-Allow-Origin","*");
+        app()->make("response")->header("Access-Control-Allow-Methods","POST, GET, OPTIONS,DELETE,PUT");
+        return $next($request);
     }
 }
