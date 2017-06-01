@@ -19,7 +19,7 @@
         }
     },
     "require": {
-        "php": ">=7.0",
+        "php": ">=7.1",
         "ext-mbstring": "*",
         "ext-openssl": "*",
         "illuminate/container": "5.4.*",
