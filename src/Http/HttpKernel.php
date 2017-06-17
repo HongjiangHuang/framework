@@ -114,7 +114,7 @@ class HttpKernel implements IHttpKernel
         $controller = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
-            $class = config()->get('modules_namespace', "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
+            $class = config("app.modules_namespace","App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
             $this->registerController($path_info, $class);
             $controller = $this->getController($path_info);
         } else if ($controller === false) {
@@ -132,13 +132,6 @@ class HttpKernel implements IHttpKernel
         }
         $reflection = new \ReflectionMethod($controller, $action);
         $annotation = new Annotation($reflection->getDocComment(), app());
-        $params = $reflection->getParameters();
-        foreach ($params as $param) {
-            if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
-                throw new HttpParamException($param->name);
-            }
-            $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
-        }
         $annotation->parser();
         $pipeline = app()->make('pipeline');
         $filters = [];
@@ -148,8 +141,14 @@ class HttpKernel implements IHttpKernel
                     $filters[] = $filter . ":" . $param;
             }
         }
-        var_dump($this->params);
-        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action) {
+        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action , $reflection) {
+            $params = $reflection->getParameters();
+            foreach ($params as $param) {
+                if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
+                    throw new HttpParamException($param->name);
+                }
+                $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
+            }
             return app()->call([$controller, $action], $this->params);
         });
     }
@@ -173,8 +172,8 @@ class HttpKernel implements IHttpKernel
             }
             return app()->makeWith(IResponse::class, ['content' => $content]);
         } catch (HttpException $http_exception) {
-            if (config()->get('debug', false) === false) {
-                return app()->makeWith(IResponse::class, ["content" => "程序错误", 'status' => 500]);
+            if (config()->get('app.debug', false) === false) {
+                return app()->makeWith(IResponse::class, ["content" => ['errCode' => 500 , 'errMsg' => '程序错误' , 'data' => ''], 'status' => 500]);
             }
             return $controller->dealWithError($http_exception);
         }

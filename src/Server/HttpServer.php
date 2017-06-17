@@ -159,6 +159,8 @@ class HttpServer implements IServer,IHttpServer
     {
         $this->setGlobal($req);
         $this->application->instance('request',$req);
+        if($req->server['request_uri'] == "favorite.ico")
+            return $res->end("123");
         $this->application->instance('response',$res);
         $this->application->instance(\Swoole\Http\Response::class,$res);
         $response = $this->application->handle(Request::createFromGlobals());
@@ -180,7 +182,7 @@ class HttpServer implements IServer,IHttpServer
 
     public function onClose()
     {
-
+        echo "连接关闭\n";
     }
 
     public function version(): string

@@ -56,11 +56,13 @@ if (!function_exists('request')) {
 }
 
 /**
- * 获得ConfigManage
+ * Config manage class
  */
 if (!function_exists('config')) {
-    function config($namespace = 'app') : ConfigManage
+    function config($key = null , $default = null)
     {
-        return app()->makeWith('config',['namespace' => $namespace]);
+        return $key === null ? app('config')
+                : ($default === null ? app('config')[$key]
+                : app('config')->get($key,$default));
     }
 }

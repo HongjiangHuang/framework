@@ -25,6 +25,11 @@ abstract class Controller
         throw new NotFoundException("页面找不到");
     }
 
+    public function toResponse() : IResponse
+    {
+
+    }
+
     /**
      * 处理错误
      * @param $exception
