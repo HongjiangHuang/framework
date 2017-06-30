@@ -25,18 +25,23 @@ abstract class Controller
         throw new NotFoundException("页面找不到");
     }
 
-    public function toResponse() : IResponse
+    public function toResponse($data)
     {
-
+        return $data;
     }
 
     /**
      * 处理错误
      * @param $exception
-     * @return mixed
+     * @return IResponse
      */
     public function dealWithError(HttpException $exception): IResponse
     {
-        return app(IResponse::class, ['content' => ["data" => "", "errMsg" => $exception->getMessage(), "errCode" => $exception->getCode()], 'status' => $exception->getCode()]);
+        return app(IResponse::class, ['content' => $this->toResponse(["data" => "", "errMsg" => $exception->getMessage(), "errCode" => $exception->getCode()]), 'status' => $exception->getCode()]);
+    }
+
+    public function getContentType() : string
+    {
+        return "text/html";
     }
 }

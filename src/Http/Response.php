@@ -11,7 +11,6 @@
 declare(strict_types = 1);
 namespace JYPHP\Core\Http;
 
-
 use JYPHP\Core\Exception\JyException;
 use JYPHP\Core\Interfaces\Http\IResponse;
 
@@ -57,6 +56,20 @@ class Response implements IResponse
      * @var string
      */
     protected $body;
+
+
+    //200 OK - [GET]：服务器成功返回用户请求的数据，该操作是幂等的（Idempotent）。
+    //201 CREATED - [POST/PUT/PATCH]：用户新建或修改数据成功。
+    //202 Accepted - [*]：表示一个请求已经进入后台排队（异步任务）
+    //204 NO CONTENT - [DELETE]：用户删除数据成功。
+    //400 INVALID REQUEST - [POST/PUT/PATCH]：用户发出的请求有错误，服务器没有进行新建或修改数据的操作，该操作是幂等的。
+    //401 Unauthorized - [*]：表示用户没有权限（令牌、用户名、密码错误）。
+    //403 Forbidden - [*] 表示用户得到授权（与401错误相对），但是访问是被禁止的。
+    //404 NOT FOUND - [*]：用户发出的请求针对的是不存在的记录，服务器没有进行操作，该操作是幂等的。
+    //406 Not Acceptable - [GET]：用户请求的格式不可得（比如用户请求JSON格式，但是只有XML格式）。
+    //410 Gone -[GET]：用户请求的资源被永久删除，且不会再得到的。
+    //422 Unprocesable entity - [POST/PUT/PATCH] 当创建一个对象时，发生一个验证错误。
+    //500 INTERNAL SERVER ERROR - [*]：服务器发生错误，用户将无法判断发出的请求是否成功。
 
     /**
      * http status
@@ -130,12 +143,26 @@ class Response implements IResponse
     }
 
     /**
+     * 设置内容类型
+     * text/html
+     * text/json
+     * text/xml
+     * ...
+     * @param $content_type
+     * @return mixed
+     */
+    public function setContentType($content_type)
+    {
+        return $this->contentType = $content_type;
+    }
+
+    /**
      * Response constructor.
      * @param string|array|\ArrayAccess $content
      * @param int $status
      * @param array $headers
      */
-    public function __construct($content = "", int $status = 200, array $headers = [])
+    public function __construct($content = "", int $status = 200 , array $headers = [])
     {
         $this->response = app()->make("response");
         $this->data = $content;
@@ -166,21 +193,49 @@ class Response implements IResponse
         return $this->response->end($this->body);
     }
 
+    /**
+     * 设置请求头
+     * @param string $header_string
+     * @param string $header_value
+     * @return mixed
+     */
     public function header(string $header_string, string $header_value)
     {
         return $this->response->header($header_string,$header_value);
     }
 
+    /**
+     * 设置Cookie
+     * @param string $key
+     * @param string $value
+     * @param int $expire
+     * @param string $path
+     * @param string $domain
+     * @param bool $secure
+     * @param bool $httponly
+     * @return mixed
+     */
     public function cookie(string $key, string $value = "", int $expire = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false)
     {
         return $this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly);
     }
 
+    /**
+     * 改变响应状态码
+     * @param int $http_status_code
+     * @return mixed
+     */
     public function status(int $http_status_code)
     {
         return $this->response->status($http_status_code);
     }
 
+    /**
+     * 压缩
+     * 最大等级为9
+     * @param int $level
+     * @return mixed
+     */
     public function gzip(int $level = 1)
     {
         return $this->response->gzip($level);

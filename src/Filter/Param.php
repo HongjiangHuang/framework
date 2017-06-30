@@ -14,43 +14,22 @@ use Illuminate\Support\Arr;
 use JYPHP\Core\Exception\HttpException;
 use JYPHP\Core\Filter\Abstracts\Filter;
 use JYPHP\Core\Http\Request;
+use JYPHP\Core\Validate;
 
-class Param extends Filter
+final class Param extends Filter
 {
     private $field;
 
-    /**
-     * @var array
-     */
-    private $validate = true;
-
-    //private $data;
-
-    /**
-     * @var Request
-     */
-    private $request;
-
-//    private function executeRule($i)
-//    {
-//        $rule = [
-//            'string' => function () use ($i) {
-//                return $this->request->get($i) === null ? false : true;
-//            },
-//            'int' => function () use ($i) {
-//                return $this->request->get($i) === null ? false : true;
-//            },
-//        ];
-//    }
-
     public function handle(Request $request, \Closure $next, ...$params)
     {
-//        $this->request = $request;
-//        $this->parser($params);
-//        if ($this->validate === false) {
-//
-//        }
-        //throw new HttpException("参数" . $this->field . "未通过验证", "500");
+        $this->field = str_replace("$","",array_pop($params));
+        $rule = [
+            $this->field => array_pop($params)
+        ];
+        $validate = new Validate($rule);
+        if (!$validate->check([$this->field => $request->get($this->field)])) {
+            throw new HttpException($validate->getError()?:"参数" . $this->field . "未通过验证", 500);
+        }
         return $next($request);
     }
 }

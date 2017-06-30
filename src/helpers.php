@@ -13,7 +13,6 @@ declare(strict_types = 1);
  * 获得全局app对象
  */
 use Symfony\Component\HttpFoundation\Request;
-use \JYPHP\Core\Config\ConfigManage;
 
 if (!function_exists("app")) {
 
@@ -30,7 +29,6 @@ if (!function_exists("app")) {
         return empty($parameters)
             ? \JYPHP\Core\Application::getInstance()->make($abstract)
             : \JYPHP\Core\Application::getInstance()->makeWith($abstract, $parameters);
-
     }
 
 }

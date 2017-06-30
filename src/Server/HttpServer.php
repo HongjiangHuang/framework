@@ -157,15 +157,17 @@ class HttpServer implements IServer,IHttpServer
 
     public function onRequest($req, $res)
     {
-        $this->setGlobal($req);
-        $this->application->instance('request',$req);
-        if($req->server['request_uri'] == "favorite.ico")
-            return $res->end("123");
-        $this->application->instance('response',$res);
-        $this->application->instance(\Swoole\Http\Response::class,$res);
-        $response = $this->application->handle(Request::createFromGlobals());
-        $response->header("Server",$this->version());
-        $response->send();
+        if($req->server['request_uri'] != "favorite.ico"){
+            $this->setGlobal($req);
+            $this->application->instance('request',$req);
+            $this->application->instance('response',$res);
+            $this->application->instance(\Swoole\Http\Response::class,$res);
+            $response = $this->application->handle(Request::createFromGlobals());
+            $response->header("Server",$this->version());
+            $response->send();
+        }else{
+            $res->end(" ");
+        }
     }
 
     public function setWorkNum(int $num): self
