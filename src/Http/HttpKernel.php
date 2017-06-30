@@ -109,20 +109,33 @@ class HttpKernel implements IHttpKernel
             return null;
         }
         $this->module = $par_module = $par_path_info[0];
-        $this->action = $par_path_info[2] ?: config()->get('default_action', "index");
         $par_controller = $par_path_info[1];
         $controller = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
-            $class = config()->get('modules_namespace', "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
+            $class = config("app.modules_namespace","App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
             $this->registerController($path_info, $class);
             $controller = $this->getController($path_info);
         } else if ($controller === false) {
             return null;
         }
-        return $this->controller = $controller;
+        $this->controller = $controller;
+
+        //执行顺序
+        //用户指定action?
+        //请求类型mothod?
+        //默认action?
+        //都没有则404
+        $this->action = $par_path_info[2] ?: (method_exists($controller,$this->request->getMethod())
+            ? $this->request->getMethod()
+            : config()->get('default_action', "index"));
+        return $this->controller;
     }
 
+    /**
+     * 开始处理
+     * @return mixed
+     */
     public function callController()
     {
         $controller = $this->controller;
@@ -132,13 +145,6 @@ class HttpKernel implements IHttpKernel
         }
         $reflection = new \ReflectionMethod($controller, $action);
         $annotation = new Annotation($reflection->getDocComment(), app());
-        $params = $reflection->getParameters();
-        foreach ($params as $param) {
-            if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
-                throw new HttpParamException($param->name);
-            }
-            $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
-        }
         $annotation->parser();
         $pipeline = app()->make('pipeline');
         $filters = [];
@@ -148,8 +154,21 @@ class HttpKernel implements IHttpKernel
                     $filters[] = $filter . ":" . $param;
             }
         }
-        var_dump($this->params);
-        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action) {
+
+        //开始处理
+        //向管道发送request对象
+        //将所有过滤器加入管道中
+        //随后自动注入请求参数
+        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action , $reflection) {
+            $params = $reflection->getParameters();
+            foreach ($params as $param) {
+                if(is_null($param->getType())){
+                    if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
+                        throw new HttpParamException($param->name);
+                    }
+                    $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
+                }
+            }
             return app()->call([$controller, $action], $this->params);
         });
     }
@@ -171,12 +190,17 @@ class HttpKernel implements IHttpKernel
             if ($content instanceof IResponse) {
                 return $content;
             }
-            return app()->makeWith(IResponse::class, ['content' => $content]);
+            $response =  app()->makeWith(IResponse::class, [ 'content' => $controller->toResponse($content) ]);
+            $response->setContentType($controller->getContentType());
+            return $response;
         } catch (HttpException $http_exception) {
-            if (config()->get('debug', false) === false) {
-                return app()->makeWith(IResponse::class, ["content" => "程序错误", 'status' => 500]);
+            if (config()->get('app.debug', false) === false && $http_exception->getCode() >= 500 ) {
+                $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse(['errCode' => 500 , 'errMsg' => '程序错误' , 'data' => '']), 'status' => 500]);
+            }else{
+                $response = $controller->dealWithError($http_exception);
             }
-            return $controller->dealWithError($http_exception);
+            $response->setContentType($controller->getContentType());
+            return $response;
         }
     }
 }

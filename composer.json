@@ -24,6 +24,7 @@
         "ext-openssl": "*",
         "illuminate/container": "5.4.*",
         "illuminate/database": "5.4.*",
+        "illuminate/config": "^5.4",
         "illuminate/pipeline": "5.4.*",
         "symfony/console": "3.2.*",
         "symfony/http-foundation": "^3.2",

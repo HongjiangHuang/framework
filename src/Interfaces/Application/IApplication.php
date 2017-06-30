@@ -62,11 +62,6 @@ interface IApplication
 
     public function handle(Request $request) : IResponse;
 
-    /**
-     * Register all of the configured providers.
-     * @return void
-     */
-    public function registerConfiguredProviders(): void;
 
     /**
      * Register a service provider with the application.
@@ -76,12 +71,4 @@ interface IApplication
      * @return \Illuminate\Support\ServiceProvider
      */
     public function register($provider, array $options = [], bool $force = false): ServiceProvider;
-
-    /**
-     * Register a deferred provider and service.
-     * @param  string  $provider
-     * @param  string  $service
-     * @return void
-     */
-    public function registerDeferredProvider($provider, ?string $service = null): void;
 }

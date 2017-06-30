@@ -11,16 +11,14 @@
 declare(strict_types = 1);
 namespace JYPHP\Core;
 
+use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
-use JYPHP\Core\Config\Config;
-use JYPHP\Core\Config\ConfigServiceProvider;
 use JYPHP\Core\Filter\FilterServiceProvider;
 use JYPHP\Core\Http\HttpServiceProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Interfaces\Application\IApplication;
-use Illuminate\Database\Capsule\Manager as Db;
 use JYPHP\Core\Interfaces\Http\IHttpKernel;
 use JYPHP\Core\Interfaces\Http\IResponse;
 use JYPHP\Core\Pipeline\PipelineServiceProvider;
@@ -101,6 +99,7 @@ class Application extends Container implements IApplication
      */
     protected function initConfig()
     {
+        $items = [];
         if (!is_dir($path = $this->configPath())) {
             throw new \Exception("目录" . $this->configPath() . "不存在");
         }
@@ -109,18 +108,17 @@ class Application extends Container implements IApplication
             if (preg_match("/.php$/", $file)) {
                 $file_path = $this->configPath() . "/" . $file;
                 $namespace = str_replace(".php", "", $file);
-                Config::load(require($file_path), $namespace);
+                $items[$namespace] = require $file_path;
             }
         }
+        $config = new Repository($items);
+        $this->instance('config',$config);
     }
 
     protected function registerBaseProvider(): void
     {
-        //$this->register(RoutingServiceProvider::class);
-        //$this->register(FilesystemServiceProvider::class);
         $this->register(PipelineServiceProvider::class);
         $this->register(HttpServiceProvider::class);
-        $this->register(ConfigServiceProvider::class);
         $this->register(FilterServiceProvider::class);
     }
 
@@ -132,19 +130,19 @@ class Application extends Container implements IApplication
         $this->alias('app', IApplication::class);
     }
 
-    /**
-     * 初始化Eloquent ORM
-     */
-    protected function initDb(): void
-    {
-        $db = new Db();
-        $databases = $this->makeWith('config', ['namespace' => 'databases']);
-        foreach ($databases as $name => $config) {
-            $db->addConnection($config, $name);
-        }
-        $db->setAsGlobal();
-        $db->bootEloquent();
-    }
+//    /**
+//     * 初始化Eloquent ORM
+//     */
+//    protected function initDb(): void
+//    {
+//        $db = new Db();
+//        $databases = $this->makeWith('config', ['namespace' => 'databases']);
+//        foreach ($databases as $name => $config) {
+//            $db->addConnection($config, $name);
+//        }
+//        $db->setAsGlobal();
+//        $db->bootEloquent();
+//    }
 
     public function __construct(string $basePath)
     {
@@ -153,7 +151,6 @@ class Application extends Container implements IApplication
         $this->registerBaseBindings();
         $this->registerBaseProvider();
         $this->registerCoreContainerAliases();
-        $this->initDb();
     }
 
     /**
@@ -172,11 +169,6 @@ class Application extends Container implements IApplication
     public function basePath(): string
     {
         return $this->basePath;
-    }
-
-    public function registerConfiguredProviders(): void
-    {
-        // TODO: Implement registerConfiguredProviders() method.
     }
 
     public function register($provider, array $options = [], bool $force = false): ServiceProvider
@@ -213,10 +205,6 @@ class Application extends Container implements IApplication
         });
     }
 
-    public function registerDeferredProvider($provider, ?string $service = null): void
-    {
-        // TODO: Implement registerDeferredProvider() method.
-    }
 
     /**
      * @param Request $request

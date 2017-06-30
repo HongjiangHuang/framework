@@ -13,6 +13,11 @@ namespace JYPHP\Core\Annotation;
 
 use JYPHP\Core\Interfaces\Application\IApplication;
 
+/**
+ * Class Annotation
+ * @package JYPHP\Core\Annotation
+ * @author Albert<albert_p@foxmail.com>
+ */
 class Annotation
 {
 

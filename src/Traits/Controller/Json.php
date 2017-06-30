@@ -8,14 +8,24 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Config;
+namespace JYPHP\Core\Traits\Controller;
 
-use Illuminate\Support\ServiceProvider;
-
-class ConfigServiceProvider extends ServiceProvider
+trait Json
 {
-    public function register()
+    public function toResponse($data)
     {
-        $this->app->bind("config",ConfigManage::class);
+        $data = $data?:[];
+        if(is_array($data)){
+            return json_encode($data);
+        }
+        if((is_object($data) && method_exists($data,"__toString")) || is_string($data)){
+            return json_encode([ config('api.code_field','errCode') => 200 , config('api.msg_field','errMsg') => "ok" , config('api.data_field','data') => $data]);
+        }
+        return $data;
+    }
+
+    public function getContentType() : string
+    {
+        return "text/json";
     }
 }
