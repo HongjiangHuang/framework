@@ -22,7 +22,6 @@
         "php": ">=7.1",
         "ext-mbstring": "*",
         "ext-openssl": "*",
-        "jyphp/coroutines" : "*",
         "illuminate/container": "5.4.*",
         "illuminate/config": "^5.4",
         "illuminate/pipeline": "5.4.*",
