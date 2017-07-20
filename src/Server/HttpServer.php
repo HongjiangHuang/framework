@@ -152,6 +152,7 @@ class HttpServer implements IServer,IHttpServer
         $this->swooleServer = $swoole_server;
         $this->swooleServer->on('Request',[$this,'onRequest']);
         $this->swooleServer->on('Close',[$this,'onClose']);
+        $this->application->boot();
         $this->swooleServer->start();
     }
 

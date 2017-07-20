@@ -34,9 +34,10 @@ class Validate
     protected static $typeMsg = [
         'require' => ':attribute不能为空',
         'number' => ':attribute必须是数字',
+        'string' => ':attribute必须是字符串',
         'float' => ':attribute必须是浮点数',
         'boolean' => ':attribute必须是布尔值',
-        'email' => ':attribute格式不符',
+        'email' => ':attribute邮箱格式不符',
         'array' => ':attribute必须是数组',
         'accepted' => ':attribute必须是yes、on或者1',
         'date' => ':attribute格式不符合',
@@ -572,6 +573,9 @@ class Validate
                 break;
             case 'number':
                 $result = is_numeric($value);
+                break;
+            case 'string':
+                $result = is_string($value);
                 break;
             case 'integer':
                 // 是否为整型

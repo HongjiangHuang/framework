@@ -10,7 +10,6 @@
 // +----------------------------------------------------------------------
 namespace JYPHP\Core\Filter;
 
-use Illuminate\Support\Arr;
 use JYPHP\Core\Exception\HttpException;
 use JYPHP\Core\Filter\Abstracts\Filter;
 use JYPHP\Core\Http\Request;
