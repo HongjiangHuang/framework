@@ -62,6 +62,12 @@ interface IApplication
 
     public function handle(Request $request) : IResponse;
 
+    /**
+     * Boot the application's service providers.
+     * @return void
+     */
+    public function boot();
+
 
     /**
      * Register a service provider with the application.

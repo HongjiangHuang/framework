@@ -14,5 +14,5 @@ use JYPHP\Core\Http\Response;
 
 abstract class Logic
 {
-    abstract public function toResponse() : Response;
+    
 }

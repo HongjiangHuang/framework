@@ -126,7 +126,7 @@ class HttpKernel implements IHttpKernel
         //请求类型mothod?
         //默认action?
         //都没有则404
-        $this->action = $par_path_info[2] ?: (method_exists($controller,$this->request->getMethod())
+        $this->action = @$par_path_info[2] ?: (method_exists($controller,$this->request->getMethod())
             ? $this->request->getMethod()
             : config()->get('default_action', "index"));
         return $this->controller;

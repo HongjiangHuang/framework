@@ -25,6 +25,10 @@ abstract class Controller
         throw new NotFoundException("页面找不到");
     }
 
+    /**
+     * @param $data
+     * @return mixed
+     */
     public function toResponse($data)
     {
         return $data;

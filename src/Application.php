@@ -13,6 +13,7 @@ namespace JYPHP\Core;
 
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Events\EventServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Filter\FilterServiceProvider;
@@ -39,11 +40,20 @@ class Application extends Container implements IApplication
      */
     protected $serviceProviders = [];
 
+    protected $booted = false;
+
     /**
      * 已加载的服务
      * @var array
      */
     protected $loadedProviders = [];
+
+    /**
+     * @var array
+     */
+    protected $bootingCallbacks = [];
+    
+    protected $bootedCallbacks = [];
 
     /**
      * 存储目录
@@ -106,13 +116,13 @@ class Application extends Container implements IApplication
         $dir = opendir($path);
         while (($file = readdir($dir)) !== false) {
             if (preg_match("/.php$/", $file)) {
-                $file_path = $this->configPath() . "/" . $file;
-                $namespace = str_replace(".php", "", $file);
+                $file_path         = $this->configPath() . "/" . $file;
+                $namespace         = str_replace(".php", "", $file);
                 $items[$namespace] = require $file_path;
             }
         }
         $config = new Repository($items);
-        $this->instance('config',$config);
+        $this->instance('config', $config);
     }
 
     protected function registerBaseProvider(): void
@@ -120,6 +130,7 @@ class Application extends Container implements IApplication
         $this->register(PipelineServiceProvider::class);
         $this->register(HttpServiceProvider::class);
         $this->register(FilterServiceProvider::class);
+        $this->register(EventServiceProvider::class);
     }
 
     /**
@@ -129,20 +140,6 @@ class Application extends Container implements IApplication
     {
         $this->alias('app', IApplication::class);
     }
-
-//    /**
-//     * 初始化Eloquent ORM
-//     */
-//    protected function initDb(): void
-//    {
-//        $db = new Db();
-//        $databases = $this->makeWith('config', ['namespace' => 'databases']);
-//        foreach ($databases as $name => $config) {
-//            $db->addConnection($config, $name);
-//        }
-//        $db->setAsGlobal();
-//        $db->bootEloquent();
-//    }
 
     public function __construct(string $basePath)
     {
@@ -183,7 +180,45 @@ class Application extends Container implements IApplication
             $this[$key] = $value;
         }
         $this->markAsRegistered($provider);
+
+        if ($this->booted) {
+            $this->bootProvider($provider);
+        }
         return $provider;
+    }
+
+    public function fireAppCallbacks(array $callbacks)
+    {
+        foreach ($callbacks as $callback) {
+            call_user_func($callback);
+        }
+    }
+
+    public function bootProvider(ServiceProvider $provider)
+    {
+        if (method_exists($provider, 'boot')) {
+            $provider->boot();
+        }
+    }
+
+    public function boot()
+    {
+        if ($this->booted) {
+            return;
+        }
+
+        // Once the application has booted we will also fire some "booted" callbacks
+        // for any listeners that need to do work after this initial booting gets
+        // finished. This is useful when ordering the boot-up processes we run.
+        $this->fireAppCallbacks($this->bootingCallbacks);
+
+        array_walk($this->serviceProviders, function ($p) {
+            $this->bootProvider($p);
+        });
+
+        $this->booted = true;
+
+        $this->fireAppCallbacks($this->bootedCallbacks);
     }
 
     /**
