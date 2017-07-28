@@ -112,6 +112,8 @@ class HttpServer implements IServer,IHttpServer
 
     private function setGlobal($req){
         //把$req->server请求信息注入$_SERVER
+        $_GET = $_POST = $_FILES = $_COOKIE = $_SERVER = $_REQUEST = [];
+
         if(!empty($req->get))
             $_GET = $req->get;
         if(!empty($req->post))
@@ -130,6 +132,8 @@ class HttpServer implements IServer,IHttpServer
                 $_SERVER['HTTP_'.strtoupper($key)] = $value;
             }
         }
+
+        $_REQUEST = array_merge($req->get,$req->post,$req->cookie);
     }
 
     /**
