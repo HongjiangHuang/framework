@@ -14,6 +14,7 @@ namespace JYPHP\Core;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
 use Illuminate\Events\EventServiceProvider;
+use Illuminate\Session\SessionServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Filter\FilterServiceProvider;
@@ -52,7 +53,7 @@ class Application extends Container implements IApplication
      * @var array
      */
     protected $bootingCallbacks = [];
-    
+
     protected $bootedCallbacks = [];
 
     /**
@@ -129,6 +130,7 @@ class Application extends Container implements IApplication
     {
         $this->register(PipelineServiceProvider::class);
         $this->register(HttpServiceProvider::class);
+        $this->register(SessionServiceProvider::class);
         $this->register(FilterServiceProvider::class);
         $this->register(EventServiceProvider::class);
     }
