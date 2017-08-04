@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types = 1);
+declare(strict_types=1);
 namespace JYPHP\Core\Server;
 
 use JYPHP\Core\Http\Request;
@@ -16,7 +16,7 @@ use JYPHP\Core\Interfaces\Application\IApplication;
 use JYPHP\Core\Interfaces\Server\IHttpServer;
 use JYPHP\Core\Interfaces\Server\IServer;
 
-class HttpServer implements IServer, IHttpServer
+class HttpServer implements IServer,IHttpServer
 {
     /**
      * @var string
@@ -94,15 +94,15 @@ class HttpServer implements IServer, IHttpServer
      * 新建swoole http 服务器
      * @return \swoole_http_server
      */
-    protected function create_server(): \swoole_http_server
+    protected function create_server() : \swoole_http_server
     {
-        $swoole_server = new \swoole_http_server($this->defaultHost, $this->defaultPort);
-        $configure     = [
+        $swoole_server = new \swoole_http_server($this->defaultHost,$this->defaultPort);
+        $configure = [
             'worker_num' => $this->workNum,
             'max_request' => $this->maxRequest,
             'max_conn' => $this->maxConn,
             'dispatch_mode' => $this->dispatchMode,
-            'debug_mode' => 1,
+            'debug_mode'=> 1,
             'daemonize' => $this->daemon,
             'heartbeat_check_interval' => 60
         ];
@@ -110,29 +110,30 @@ class HttpServer implements IServer, IHttpServer
         return $swoole_server;
     }
 
-    private function setGlobal($req)
-    {
+    private function setGlobal($req){
+        //把$req->server请求信息注入$_SERVER
         $_GET = $_POST = $_FILES = $_COOKIE = $_SERVER = $_REQUEST = [];
 
-        //把$req->server请求信息注入$_SERVER
-        if (!empty($req->get))
+        if(!empty($req->get))
             $_GET = $req->get;
-        if (!empty($req->post))
+        if(!empty($req->post))
             $_POST = $req->post;
-        if (!empty($req->cookie))
+        if(!empty($req->cookie))
             $_COOKIE = $req->cookie;
-        if (!empty($req->files))
+        if(!empty($req->files))
             $_FILES = $req->files;
-        if (!empty($req->server)) {
-            foreach ($req->server as $key => $value) {
+        if(!empty($req->server)){
+            foreach($req->server as $key => $value){
                 $_SERVER[strtoupper($key)] = $value;
             }
         }
-        if (!empty($req->header)) {
-            foreach ($req->header as $key => $value) {
-                $_SERVER['HTTP_' . strtoupper($key)] = $value;
+        if(!empty($req->header)){
+            foreach($req->header as $key => $value){
+                $_SERVER['HTTP_'.strtoupper($key)] = $value;
             }
         }
+
+        $_REQUEST = array_merge($req->get,$req->post,$req->cookie);
 
         $_REQUEST = array_merge($req->get??[], $req->post??[], $req->cookie??[]);
     }
@@ -150,29 +151,28 @@ class HttpServer implements IServer, IHttpServer
      * 运行服务器
      * @param null $swoole_server
      */
-    public function run($swoole_server = null)
-    {
-        if (empty($swoole_server) || (!$swoole_server instanceof \swoole_http_server)) {
+    public function run ($swoole_server = null){
+        if(empty($swoole_server) || (!$swoole_server instanceof \swoole_http_server)){
             $swoole_server = $this->create_server();
         }
         $this->swooleServer = $swoole_server;
-        $this->swooleServer->on('Request', [$this, 'onRequest']);
-        $this->swooleServer->on('Close', [$this, 'onClose']);
+        $this->swooleServer->on('Request',[$this,'onRequest']);
+        $this->swooleServer->on('Close',[$this,'onClose']);
         $this->application->boot();
         $this->swooleServer->start();
     }
 
     public function onRequest($req, $res)
     {
-        if ($req->server['request_uri'] != "favorite.ico") {
+        if($req->server['request_uri'] != "favorite.ico"){
             $this->setGlobal($req);
-            $this->application->instance('request', $req);
-            $this->application->instance('response', $res);
-            $this->application->instance(\Swoole\Http\Response::class, $res);
+            $this->application->instance('request',$req);
+            $this->application->instance('response',$res);
+            $this->application->instance(\Swoole\Http\Response::class,$res);
             $response = $this->application->handle(Request::createFromGlobals());
-            $response->header("Server", $this->version());
+            $response->header("Server",$this->version());
             $response->send();
-        } else {
+        }else{
             $res->end(" ");
         }
     }
