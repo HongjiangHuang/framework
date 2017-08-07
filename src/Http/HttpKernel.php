@@ -12,6 +12,7 @@ declare(strict_types = 1);
 namespace JYPHP\Core\Http;
 
 use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\Session;
 use JYPHP\Core\Annotation\Annotation;
 use JYPHP\Core\Controller;
 use JYPHP\Core\Exception\HttpException;
@@ -108,12 +109,12 @@ class HttpKernel implements IHttpKernel
         if (empty($par_path_info[0]) || empty($par_path_info[1])) {
             return null;
         }
-        $this->module = $par_module = $par_path_info[0];
+        $this->module   = $par_module = $par_path_info[0];
         $par_controller = $par_path_info[1];
-        $controller = $this->getController($path_info);
+        $controller     = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
-            $class = config("app.modules_namespace","App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
+            $class = config("app.modules_namespace", "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
             $this->registerController($path_info, $class);
             $controller = $this->getController($path_info);
         } else if ($controller === false) {
@@ -126,7 +127,7 @@ class HttpKernel implements IHttpKernel
         //请求类型mothod?
         //默认action?
         //都没有则404
-        $this->action = @$par_path_info[2] ?: (method_exists($controller,$this->request->getMethod())
+        $this->action = @$par_path_info[2] ?: (method_exists($controller, $this->request->getMethod())
             ? $this->request->getMethod()
             : config()->get('default_action', "index"));
         return $this->controller;
@@ -139,15 +140,15 @@ class HttpKernel implements IHttpKernel
     public function callController()
     {
         $controller = $this->controller;
-        $action = $this->action;
-        if (!method_exists($controller,$action)){
+        $action     = $this->action;
+        if (!method_exists($controller, $action)) {
             $action = "missMethod";
         }
         $reflection = new \ReflectionMethod($controller, $action);
         $annotation = new Annotation($reflection->getDocComment(), app());
         $annotation->parser();
         $pipeline = app()->make('pipeline');
-        $filters = [];
+        $filters  = [];
         foreach ($annotation->getFilter() as $filter => $params) {
             if (FilterProvider::has($filter)) {
                 foreach ($params as $param)
@@ -159,14 +160,14 @@ class HttpKernel implements IHttpKernel
         //向管道发送request对象
         //将所有过滤器加入管道中
         //随后自动注入请求参数
-        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action , $reflection) {
+        return $content = $pipeline->send($this->request)->through($filters)->then(function ($request) use ($controller, $action, $reflection) {
             $params = $reflection->getParameters();
             foreach ($params as $param) {
-                if(is_null($param->getType())){
-                    if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()){
+                if (is_null($param->getType())) {
+                    if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()) {
                         throw new HttpParamException($param->name);
                     }
-                    $this->params[$param->name] = $this->request->get($param->name) ? : $param->getDefaultValue();
+                    $this->params[$param->name] = $this->request->get($param->name) ?: $param->getDefaultValue();
                 }
             }
             return app()->call([$controller, $action], $this->params);
@@ -180,26 +181,39 @@ class HttpKernel implements IHttpKernel
      */
     public function handle(Request $request): IResponse
     {
-        $this->request = $request;
-        $controller = $this->controller($this->pathInfo = $request->getPathInfo());
-        if (is_null($controller)) {
-            return app()->makeWith(IResponse::class, ["content" => "资源不存在(Controller Not Fount)", 'status' => 404]);
+        $session_id = '';
+        if (config()->get('app.debug', false)) {
+            //调试模式
+            $session_id = $request->get(config('session.cookie'));
         }
+        if ($request->header('csrf-token')) {
+            $session_id = $request->header('csrf-token');
+        }
+        Session::setId($session_id);
+        Session::start();
+
+        $this->request = $request;
+        $controller    = $this->controller($this->pathInfo = $request->getPathInfo());
         try {
-            $content = $this->callController();
-            if ($content instanceof IResponse) {
-                return $content;
+            if (is_null($controller)) {
+                $response = app()->makeWith(IResponse::class, ["content" => "资源不存在(Controller Not Fount)", 'status' => 404]);
+            } else {
+                $content = $this->callController();
+                if ($content instanceof IResponse) {
+                    $response = $content;
+                } else {
+                    $response = app()->makeWith(IResponse::class, ['content' => $controller->toResponse($content)]);
+                }
             }
-            $response =  app()->makeWith(IResponse::class, [ 'content' => $controller->toResponse($content) ]);
-            $response->setContentType($controller->getContentType());
-            return $response;
         } catch (HttpException $http_exception) {
-            if (config()->get('app.debug', false) === false && $http_exception->getCode() >= 500 ) {
-                $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse(['errCode' => 500 , 'errMsg' => '程序错误' , 'data' => '']), 'status' => 500]);
-            }else{
+            if (config()->get('app.debug', false) === false && $http_exception->getCode() >= 500) {
+                $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse(['errCode' => 500, 'errMsg' => '程序错误', 'data' => '']), 'status' => 500]);
+            } else {
                 $response = $controller->dealWithError($http_exception);
             }
+        } finally {
             $response->setContentType($controller->getContentType());
+            Session::flush();
             return $response;
         }
     }

@@ -133,8 +133,6 @@ class HttpServer implements IServer,IHttpServer
             }
         }
 
-        $_REQUEST = array_merge($req->get,$req->post,$req->cookie);
-
         $_REQUEST = array_merge($req->get??[], $req->post??[], $req->cookie??[]);
     }
 
@@ -166,10 +164,10 @@ class HttpServer implements IServer,IHttpServer
     {
         if($req->server['request_uri'] != "favorite.ico"){
             $this->setGlobal($req);
-            $this->application->instance('request',$req);
+            $this->application->instance('request',Request::createFromGlobals());
             $this->application->instance('response',$res);
             $this->application->instance(\Swoole\Http\Response::class,$res);
-            $response = $this->application->handle(Request::createFromGlobals());
+            $response = $this->application->handle($this->application->make('request'));
             $response->header("Server",$this->version());
             $response->send();
         }else{
