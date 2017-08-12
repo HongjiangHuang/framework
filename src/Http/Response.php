@@ -110,7 +110,7 @@ class Response implements IResponse
     /**
      * 处理输出数据
      */
-    public function body() : self
+    public function body(): self
     {
         if (is_array($this->data)) {
             $this->body = json_encode($this->data);
@@ -120,7 +120,7 @@ class Response implements IResponse
             } else {
                 throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($this->data)));
             }
-        }else if (is_string($this->data)) {
+        } else if (is_string($this->data)) {
             $this->body = $this->data;
         } else {
             $this->body = (string)$this->data;
@@ -201,7 +201,7 @@ class Response implements IResponse
      */
     public function header(string $header_string, string $header_value)
     {
-        return $this->response->header($header_string,$header_value);
+        return $this->response->header($header_string, $header_value);
     }
 
     /**
@@ -217,7 +217,7 @@ class Response implements IResponse
      */
     public function cookie(string $key, string $value = "", int $expire = 0, string $path = '/', string $domain = '', bool $secure = false, bool $httponly = false)
     {
-        return $this->response->cookie($key,$value,$expire,$path,$domain,$secure,$httponly);
+        return $this->response->cookie($key, $value, $expire, $path, $domain, $secure, $httponly);
     }
 
     /**
@@ -248,6 +248,6 @@ class Response implements IResponse
 
     public function sendfile(string $filename, int $offset = 0, int $length = 0)
     {
-        return $this->response->sendfile($filename,$offset,$length);
+        return $this->response->sendfile($filename, $offset, $length);
     }
 }
