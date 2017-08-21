@@ -20,6 +20,7 @@ use JYPHP\Core\Exception\HttpParamException;
 use JYPHP\Core\Filter\Abstracts\FilterProvider;
 use JYPHP\Core\Interfaces\Http\IHttpKernel;
 use JYPHP\Core\Interfaces\Http\IResponse;
+use JYPHP\Core\Traits\Controller\Msgpack;
 
 class HttpKernel implements IHttpKernel
 {
@@ -194,6 +195,12 @@ class HttpKernel implements IHttpKernel
 
         $this->request = $request;
         $controller    = $this->controller($this->pathInfo = $request->getPathInfo());
+        if ($request->header('php-rpc')) {
+            $controller = new class extends Controller
+            {
+                use Msgpack;
+            };
+        }
         try {
             if (is_null($controller)) {
                 $response = app()->makeWith(IResponse::class, ["content" => "资源不存在(Controller Not Fount)", 'status' => 404]);
@@ -213,6 +220,7 @@ class HttpKernel implements IHttpKernel
             }
         } finally {
             $response->setContentType($controller->getContentType());
+            Session::save();
             Session::flush();
             return $response;
         }
