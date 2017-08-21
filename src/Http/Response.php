@@ -112,7 +112,19 @@ class Response implements IResponse
      */
     public function body() : self
     {
-        $this->body = $this->data;
+        if (is_array($this->data)) {
+            $this->body = json_encode($this->data);
+        } else if (is_object($this->data)) {
+            if (is_callable([$this->data, "__toString"])) {
+                $this->body = (string)$this->data;
+            } else {
+                throw new \InvalidArgumentException(sprintf('variable type error： %s', gettype($this->data)));
+            }
+        }else if (is_string($this->data)) {
+            $this->body = $this->data;
+        } else {
+            $this->body = (string)$this->data;
+        }
         return $this;
     }
 

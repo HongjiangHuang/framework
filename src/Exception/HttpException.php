@@ -8,10 +8,15 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace JYPHP\Core\Exception;
+
+use Exception;
 
 class HttpException extends JyException
 {
-
+    public function __construct($message = "", $code = 400, Exception $previous = null)
+    {
+        parent::__construct($message, $code, $previous);
+    }
 }
