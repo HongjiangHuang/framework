@@ -14,23 +14,29 @@ use Illuminate\Support\ServiceProvider;
 
 abstract class Module extends ServiceProvider
 {
-    public static function description(): string
-    {
-        return "erp模块";
-    }
+    abstract public function boot();
+    abstract public function register();
+    /**
+     * 模块描述
+     * @return string
+     */
+    abstract public static function description(): string;
 
-    public static function name(): string
-    {
-        return "erp";
-    }
+    /**
+     * 模块名
+     * @return string
+     */
+    abstract public static function name(): string;
 
-    public static function version(): string
-    {
-        return "1.0 beta";
-    }
+    /**
+     * 模块版本
+     * @return string
+     */
+    abstract public static function version(): string;
 
-    public static function author(): string
-    {
-        return "Albert";
-    }
+    /**
+     * 模块作者
+     * @return string
+     */
+    abstract public static function author(): string;
 }

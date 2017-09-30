@@ -1,6 +1,6 @@
 <?php
 // +----------------------------------------------------------------------
-// | JYPHP [ JUST YOU ]
+// | PHP [ JUST YOU ]
 // +----------------------------------------------------------------------
 // | Copyright (c) 2017~2017 http://www.jyphp.com All rights reserved.
 // +----------------------------------------------------------------------
@@ -8,15 +8,17 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types = 1);
-namespace JYPHP\Core\Exception;
+namespace JYPHP\Core\Traits\Controller;
 
-use Exception;
-
-class HttpException extends JyException
+trait Msgpack
 {
-    public function __construct($message = "", $code = 400, Exception $previous = null)
+    public function toResponse($data)
     {
-        parent::__construct($message, $code, $previous);
+        return msgpack_pack($data);
+    }
+
+    public function getContentType(): string
+    {
+        return "text/msgpack";
     }
 }
