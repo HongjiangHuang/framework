@@ -11,6 +11,7 @@
 declare(strict_types = 1);
 namespace JYPHP\Core\Server;
 
+use Illuminate\Support\Facades\Cache;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Interfaces\Application\IApplication;
 use JYPHP\Core\Interfaces\Server\IHttpServer;
@@ -39,7 +40,7 @@ class HttpServer implements IServer, IHttpServer
      * 因此建议开启的worker进程数为cpu核数的1-4倍。
      * @var int
      */
-    protected $workNum = 3;
+    protected $workNum = 1;
 
     /**
      * 每个worker进程允许处理的最大任务数。
@@ -47,7 +48,7 @@ class HttpServer implements IServer, IHttpServer
      * 设置该值的主要目的是为了防止worker进程处理大量请求后可能引起的内存溢出。
      * @var int
      */
-    protected $maxRequest = 1000;
+    protected $maxRequest = 5000;
 
     /**
      * 服务器允许维持的最大TCP连接数
@@ -65,7 +66,7 @@ class HttpServer implements IServer, IHttpServer
      * 3 => 抢占模式，主进程会根据Worker的忙闲状态选择投递，只会投递给处于闲置状态的Worker
      * @var int
      */
-    protected $dispatchMode = 2;
+    protected $dispatchMode = 3;
 
     /**
      * 设置程序进入后台作为守护进程运行。
@@ -94,7 +95,7 @@ class HttpServer implements IServer, IHttpServer
      * 新建swoole http 服务器
      * @return \swoole_http_server
      */
-    protected function create_server(): \swoole_http_server
+    protected function createServer(): \swoole_http_server
     {
         $swoole_server = new \swoole_http_server($this->defaultHost, $this->defaultPort);
         $configure     = [
@@ -146,6 +147,12 @@ class HttpServer implements IServer, IHttpServer
         $this->application = $application;
     }
 
+    public function daemonize()
+    {
+        $this->daemon = true;
+        return $this;
+    }
+
     /**
      * 运行服务器
      * @param null $swoole_server
@@ -153,12 +160,13 @@ class HttpServer implements IServer, IHttpServer
     public function run($swoole_server = null)
     {
         if (empty($swoole_server) || (!$swoole_server instanceof \swoole_http_server)) {
-            $swoole_server = $this->create_server();
+            $swoole_server = $this->createServer();
         }
         $this->swooleServer = $swoole_server;
         $this->swooleServer->on('Request', [$this, 'onRequest']);
         $this->swooleServer->on('Close', [$this, 'onClose']);
-        $this->application->boot();
+        $this->swooleServer->on('Shutdown', [$this, 'onShutdown']);
+        $this->swooleServer->on('Start', [$this, 'onStart']);
         $this->swooleServer->start();
     }
 
@@ -167,17 +175,13 @@ class HttpServer implements IServer, IHttpServer
         if (preg_match("/.ico/", $req->server['request_uri'])) {
             return $res->end(" ");
         }
-        if ($req->server['request_uri'] != "favorite.ico") {
-            $this->setGlobal($req);
-            $this->application->instance('request', Request::createFromGlobals());
-            $this->application->instance('response', $res);
-            $this->application->instance(\Swoole\Http\Response::class, $res);
-            $response = $this->application->handle($this->application->make('request'));
-            $response->header("Server", $this->version());
-            $response->send();
-        } else {
-            $res->end(" ");
-        }
+        $this->setGlobal($req);
+        $this->application->instance('request', Request::createFromGlobals());
+        $this->application->instance('response', $res);
+        $this->application->instance(\Swoole\Http\Response::class, $res);
+        $response = $this->application->handle($this->application->make('request'));
+        $response->header("Server", $this->version());
+        $response->send();
     }
 
     public function setWorkNum(int $num): self
@@ -190,6 +194,12 @@ class HttpServer implements IServer, IHttpServer
     {
         $this->maxRequest = $max;
         return $this;
+    }
+
+    public function onStart($server)
+    {
+        Cache::forever(self::KEY, $server->master_pid);
+        echo $server->master_pid;
     }
 
     public function onClose()

@@ -8,17 +8,17 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Http;
+namespace JYPHP\Core\Console;
 
-use \JYPHP\Core\ServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
-use JYPHP\Core\Interfaces\Http\IResponse;
+use Illuminate\Support\ServiceProvider;
+use JYPHP\Core\Interfaces\Console\IApplication;
 
-class HttpServiceProvider extends ServiceProvider
+class ConsoleProvider extends ServiceProvider
 {
     public function register()
     {
-        $this->app->bind(IHttpKernel::class, HttpKernel::class);
-        $this->app->bind(IResponse::class, Response::class);
+        $console_application = new Application();
+        $this->app->instance(IApplication::class, $console_application);
+        $this->app->instance('console', $console_application);
     }
 }

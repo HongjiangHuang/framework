@@ -8,17 +8,20 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Http;
+namespace JYPHP\Core\Bootstrap;
 
-use \JYPHP\Core\ServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
-use JYPHP\Core\Interfaces\Http\IResponse;
+use Dotenv\Dotenv;
+use Dotenv\Exception\InvalidPathException;
+use JYPHP\Core\Interfaces\Application\IApplication;
 
-class HttpServiceProvider extends ServiceProvider
+class EnvBootstrap
 {
-    public function register()
+    function bootstrap(IApplication $application)
     {
-        $this->app->bind(IHttpKernel::class, HttpKernel::class);
-        $this->app->bind(IResponse::class, Response::class);
+        try {
+            (new Dotenv($application->basePath()))->load();
+        } catch (InvalidPathException $exception) {
+            //
+        }
     }
 }

@@ -8,7 +8,7 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace JYPHP\Core\Interfaces\Application;
 
 use Illuminate\Support\ServiceProvider;
@@ -60,7 +60,7 @@ interface IApplication
      */
     public function resourcesPath(): string;
 
-    public function handle(Request $request) : IResponse;
+    public function handle(Request $request): IResponse;
 
     /**
      * Boot the application's service providers.
@@ -71,10 +71,12 @@ interface IApplication
 
     /**
      * Register a service provider with the application.
-     * @param  \Illuminate\Support\ServiceProvider|string  $provider
-     * @param  array  $options
-     * @param  bool   $force
+     * @param  \Illuminate\Support\ServiceProvider|string $provider
+     * @param  array $options
+     * @param  bool $force
      * @return \Illuminate\Support\ServiceProvider
      */
     public function register($provider, array $options = [], bool $force = false): ServiceProvider;
+
+    public function registerModules(array $providers);
 }

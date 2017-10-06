@@ -41,10 +41,21 @@ abstract class Controller
      */
     public function dealWithError(HttpException $exception): IResponse
     {
-        return app(IResponse::class, ['content' => $this->toResponse(["data" => "", "errMsg" => $exception->getMessage(), "errCode" => $exception->getCode()]), 'status' => $exception->getCode()]);
+        return app(IResponse::class,
+            [
+                "content" => $this->toResponse(
+                    [
+                        "errMsg" => $exception->getMessage(),
+                        "errCode" => $exception->getCode(),
+                        "data" => ""
+                    ]
+                ),
+                "status" => $exception->getCode()
+            ]
+        );
     }
 
-    public function getContentType() : string
+    public function getContentType(): string
     {
         return "text/html";
     }

@@ -8,17 +8,21 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Http;
+namespace JYPHP\Core;
 
-use \JYPHP\Core\ServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
-use JYPHP\Core\Interfaces\Http\IResponse;
+use Illuminate\Support\Arr;
+use \Illuminate\Support\ServiceProvider as LaravelServiceprovider;
 
-class HttpServiceProvider extends ServiceProvider
+class ServiceProvider extends LaravelServiceprovider
 {
-    public function register()
+    public function commands($commands)
     {
-        $this->app->bind(IHttpKernel::class, HttpKernel::class);
-        $this->app->bind(IResponse::class, Response::class);
+        $commands = is_array($commands) ? $commands : func_get_args();
+
+        foreach ($commands as $command) {
+            $this->app->make('console')->add(
+                $this->app->make($command)
+            );
+        }
     }
 }

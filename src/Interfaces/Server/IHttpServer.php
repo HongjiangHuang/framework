@@ -8,10 +8,12 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-declare(strict_types=1);
+declare(strict_types = 1);
 namespace JYPHP\Core\Interfaces\Server;
 
 interface IHttpServer
 {
-    public function onRequest($request,$response);
+    const KEY = 'http_server_pid';
+
+    public function onRequest($request, $response);
 }
