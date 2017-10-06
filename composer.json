@@ -1,39 +1,42 @@
 {
-    "name": "jyphp/framework",
-    "description": "php framework",
-    "type": "library",
-    "license": "MIT",
-    "authors": [
-        {
-            "name": "Albert",
-            "email": "albert_p@foxmail.com"
-        }
-    ],
-    "autoload" : {
-        "files": [
-            "src/helpers.php"
-        ],
-        "psr-4": {
-            "JYPHP\\Core\\": "src/",
-            "Tests\\": "tests/"
-        }
-    },
-    "require": {
-        "php": ">=7.1",
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
-        "illuminate/container": "5.4.*",
-        "illuminate/config": "^5.4",
-        "illuminate/session": "^5.4",
-        "illuminate/pipeline": "5.4.*",
-        "illuminate/events": "5.4.*",
-        "illuminate/database": "5.4.*",
-        "symfony/console": "3.2.*",
-        "symfony/http-foundation": "^3.2",
-        "phpunit/phpunit": "^6.1"
-    },
-    "require-dev": {
-        "mikey179/vfsStream": "^1.6",
-        "eaglewu/swoole-ide-helper": "dev-master"
+  "name": "jyphp/framework",
+  "description": "php framework",
+  "type": "library",
+  "license": "MIT",
+  "authors": [
+    {
+      "name": "Albert",
+      "email": "albert_p@foxmail.com"
     }
+  ],
+  "autoload": {
+    "files": [
+      "src/helpers.php"
+    ],
+    "psr-4": {
+      "JYPHP\\Core\\": "src/",
+      "Tests\\": "tests/"
+    }
+  },
+  "require": {
+    "php": ">=7.1",
+    "ext-mbstring": "*",
+    "ext-swoole": "*",
+    "ext-openssl": "*",
+    "illuminate/container": "5.4.*",
+    "illuminate/config": "^5.4",
+    "illuminate/session": "^5.4",
+    "illuminate/pipeline": "5.4.*",
+    "illuminate/cache": "^5.4",
+    "illuminate/events": "5.4.*",
+    "illuminate/database": "5.4.*",
+    "symfony/console": "3.2.*",
+    "symfony/http-foundation": "^3.2",
+    "phpunit/phpunit": "^6.1",
+    "vlucas/phpdotenv": "~2.2"
+  },
+  "require-dev": {
+    "mikey179/vfsStream": "^1.6",
+    "eaglewu/swoole-ide-helper": "dev-master"
+  }
 }

@@ -14,5 +14,5 @@ use JYPHP\Core\Http\Request;
 
 interface IHttpKernel
 {
-    public function handle(Request $request) : IResponse;
+    public function handle(Request $request): IResponse;
 }

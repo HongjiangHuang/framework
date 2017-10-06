@@ -8,17 +8,16 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Http;
+namespace JYPHP\Core\Bootstrap;
 
-use \JYPHP\Core\ServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
-use JYPHP\Core\Interfaces\Http\IResponse;
+use JYPHP\Core\Interfaces\Application\IApplication;
+use \Illuminate\Support\Facades\Facade;
 
-class HttpServiceProvider extends ServiceProvider
+class FrameworkBootstrap
 {
-    public function register()
+    public function bootstrap(IApplication $application)
     {
-        $this->app->bind(IHttpKernel::class, HttpKernel::class);
-        $this->app->bind(IResponse::class, Response::class);
+        Facade::setFacadeApplication($application);
+        $application->registerModules(config('modules'));
     }
 }

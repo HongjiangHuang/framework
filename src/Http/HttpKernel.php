@@ -63,7 +63,7 @@ class HttpKernel implements IHttpKernel
     /**
      * 获取控制器
      * key为空时获取所以已注册的控制器
-     * 否则获取key相对于的控制器
+     * 否则获取key相对应的控制器
      * @param null|string|null $key
      * @return array|bool|mixed|null
      */
@@ -128,9 +128,9 @@ class HttpKernel implements IHttpKernel
         //请求类型mothod?
         //默认action?
         //都没有则404
-        $this->action = @$par_path_info[2] ?: (method_exists($controller, $this->request->getMethod())
-            ? $this->request->getMethod()
-            : config()->get('default_action', "index"));
+        $this->action = $par_path_info[2] ?? (method_exists($controller, $this->request->getMethod())
+                ? $this->request->getMethod()
+                : config()->get('default_action', "index"));
         return $this->controller;
     }
 
@@ -190,6 +190,7 @@ class HttpKernel implements IHttpKernel
         if ($request->header('csrf-token')) {
             $session_id = $request->header('csrf-token');
         }
+
         Session::setId($session_id);
         Session::start();
 
@@ -219,7 +220,9 @@ class HttpKernel implements IHttpKernel
                 $response = $controller->dealWithError($http_exception);
             }
         } finally {
-            $response->setContentType($controller->getContentType());
+            if ($controller) {
+                $response->setContentType($controller->getContentType());
+            }
             Session::save();
             Session::flush();
             return $response;

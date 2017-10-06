@@ -13,13 +13,13 @@ namespace JYPHP\Core\Filter;
 use JYPHP\Core\Filter\Abstracts\Filter;
 use JYPHP\Core\Http\Request;
 
-class Csrf extends Filter
+final class Csrf extends Filter
 {
 
     public function handle(Request $request, \Closure $next, ...$params)
     {
-        app()->make("response")->header("Access-Control-Allow-Origin","*");
-        app()->make("response")->header("Access-Control-Allow-Methods","POST, GET, OPTIONS,DELETE,PUT");
+        app()->make("response")->header("Access-Control-Allow-Origin", "*");
+        app()->make("response")->header("Access-Control-Allow-Methods", "POST, GET, OPTIONS,DELETE,PUT");
         return $next($request);
     }
 }

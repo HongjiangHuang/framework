@@ -8,17 +8,21 @@
 // +----------------------------------------------------------------------
 // | Author: Albert <albert_p@foxmail.com>
 // +----------------------------------------------------------------------
-namespace JYPHP\Core\Http;
+namespace JYPHP\Core\Server;
 
-use \JYPHP\Core\ServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
-use JYPHP\Core\Interfaces\Http\IResponse;
+use JYPHP\Core\Server\Console\HttpServerCommand;
+use JYPHP\Core\ServiceProvider;
+use JYPHP\Core\Interfaces\Server\IHttpServer;
 
-class HttpServiceProvider extends ServiceProvider
+class ServerProvider extends ServiceProvider
 {
+    public function boot()
+    {
+        $this->commands(HttpServerCommand::class);
+    }
+
     public function register()
     {
-        $this->app->bind(IHttpKernel::class, HttpKernel::class);
-        $this->app->bind(IResponse::class, Response::class);
+        $this->app->singleton(IHttpServer::class, HttpServer::class);
     }
 }

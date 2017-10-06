@@ -11,19 +11,21 @@
 declare(strict_types = 1);
 namespace JYPHP\Core;
 
+use Illuminate\Cache\CacheServiceProvider;
 use Illuminate\Config\Repository;
 use Illuminate\Container\Container;
+use Illuminate\Database\DatabaseServiceProvider;
 use Illuminate\Events\EventServiceProvider;
-use Illuminate\Session\SessionServiceProvider;
+use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
-use JYPHP\Core\Filter\FilterServiceProvider;
-use JYPHP\Core\Http\HttpServiceProvider;
+use JYPHP\Core\Console\ConsoleProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Interfaces\Application\IApplication;
 use JYPHP\Core\Interfaces\Http\IHttpKernel;
 use JYPHP\Core\Interfaces\Http\IResponse;
 use JYPHP\Core\Pipeline\PipelineServiceProvider;
+use JYPHP\Core\Server\ServerProvider;
 
 class Application extends Container implements IApplication
 {
@@ -40,6 +42,15 @@ class Application extends Container implements IApplication
      * @var array
      */
     protected $serviceProviders = [];
+
+    /**
+     * 引导
+     * @var array
+     */
+    protected $bootstrap = [
+        \JYPHP\Core\Bootstrap\EnvBootstrap::class,
+        \JYPHP\Core\Bootstrap\FrameworkBootstrap::class
+    ];
 
     protected $booted = false;
 
@@ -129,9 +140,11 @@ class Application extends Container implements IApplication
     protected function registerBaseProvider(): void
     {
         $this->register(PipelineServiceProvider::class);
-        $this->register(HttpServiceProvider::class);
-        $this->register(SessionServiceProvider::class);
-        $this->register(FilterServiceProvider::class);
+        $this->register(CacheServiceProvider::class);
+        $this->register(FilesystemServiceProvider::class);
+        $this->register(DatabaseServiceProvider::class);
+        $this->register(ConsoleProvider::class);
+        $this->register(ServerProvider::class);
         $this->register(EventServiceProvider::class);
     }
 
@@ -168,6 +181,22 @@ class Application extends Container implements IApplication
     public function basePath(): string
     {
         return $this->basePath;
+    }
+
+    /**
+     * 启动引导
+     * @return $this
+     */
+    public function bootstrap($bootstrap = [])
+    {
+        $bootstrap = array_merge($this->bootstrap, $bootstrap);
+        array_walk($bootstrap, function ($value) {
+            $this->call([
+                $this->make($value),
+                "bootstrap"
+            ]);
+        });
+        return $this;
     }
 
     public function register($provider, array $options = [], bool $force = false): ServiceProvider
