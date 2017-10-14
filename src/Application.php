@@ -19,6 +19,9 @@ use Illuminate\Events\EventServiceProvider;
 use Illuminate\Filesystem\FilesystemServiceProvider;
 use Illuminate\Support\Arr;
 use Illuminate\Support\ServiceProvider;
+use JYPHP\Core\Bootstrap\ConfigBootstrap;
+use JYPHP\Core\Bootstrap\EnvBootstrap;
+use JYPHP\Core\Bootstrap\FrameworkBootstrap;
 use JYPHP\Core\Console\ConsoleProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Interfaces\Application\IApplication;
@@ -48,8 +51,9 @@ class Application extends Container implements IApplication
      * @var array
      */
     protected $bootstrap = [
-        \JYPHP\Core\Bootstrap\EnvBootstrap::class,
-        \JYPHP\Core\Bootstrap\FrameworkBootstrap::class
+        EnvBootstrap::class,
+        ConfigBootstrap::class,
+        FrameworkBootstrap::class
     ];
 
     protected $booted = false;
@@ -116,27 +120,6 @@ class Application extends Container implements IApplication
         $this->instance(Container::class, $this);
     }
 
-    /**
-     * 初始化所有配置
-     */
-    protected function initConfig()
-    {
-        $items = [];
-        if (!is_dir($path = $this->configPath())) {
-            throw new \Exception("目录" . $this->configPath() . "不存在");
-        }
-        $dir = opendir($path);
-        while (($file = readdir($dir)) !== false) {
-            if (preg_match("/.php$/", $file)) {
-                $file_path         = $this->configPath() . "/" . $file;
-                $namespace         = str_replace(".php", "", $file);
-                $items[$namespace] = require $file_path;
-            }
-        }
-        $config = new Repository($items);
-        $this->instance('config', $config);
-    }
-
     protected function registerBaseProvider(): void
     {
         $this->register(PipelineServiceProvider::class);
@@ -159,7 +142,6 @@ class Application extends Container implements IApplication
     public function __construct(string $basePath)
     {
         $this->basePath = $basePath;
-        $this->initConfig();
         $this->registerBaseBindings();
         $this->registerBaseProvider();
         $this->registerCoreContainerAliases();
