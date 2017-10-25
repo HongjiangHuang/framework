@@ -15,7 +15,7 @@ use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Session;
 use JYPHP\Core\Annotation\Annotation;
 use JYPHP\Core\Controller;
-use JYPHP\Core\Exception\HttpException;
+use JYPHP\Core\Exception\Handler;
 use JYPHP\Core\Exception\HttpParamException;
 use JYPHP\Core\Filter\Abstracts\FilterProvider;
 use JYPHP\Core\Interfaces\Http\IHttpKernel;
@@ -110,9 +110,9 @@ class HttpKernel implements IHttpKernel
         if (empty($par_path_info[0]) || empty($par_path_info[1])) {
             return null;
         }
-        $this->module   = $par_module = $par_path_info[0];
+        $this->module = $par_module = $par_path_info[0];
         $par_controller = $par_path_info[1];
-        $controller     = $this->getController($path_info);
+        $controller = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
             $class = config("app.modules_namespace", "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
@@ -141,7 +141,7 @@ class HttpKernel implements IHttpKernel
     public function callController()
     {
         $controller = $this->controller;
-        $action     = $this->action;
+        $action = $this->action;
         if (!method_exists($controller, $action)) {
             $action = "missMethod";
         }
@@ -149,7 +149,7 @@ class HttpKernel implements IHttpKernel
         $annotation = new Annotation($reflection->getDocComment(), app());
         $annotation->parser();
         $pipeline = app()->make('pipeline');
-        $filters  = [];
+        $filters = [];
         foreach ($annotation->getFilter() as $filter => $params) {
             if (FilterProvider::has($filter)) {
                 foreach ($params as $param)
@@ -195,7 +195,9 @@ class HttpKernel implements IHttpKernel
         Session::start();
 
         $this->request = $request;
-        $controller    = $this->controller($this->pathInfo = $request->getPathInfo());
+
+        $controller = $this->controller($this->pathInfo = $request->getPathInfo());
+
         if ($request->header('php-rpc')) {
             $controller = new class extends Controller
             {
@@ -213,11 +215,10 @@ class HttpKernel implements IHttpKernel
                     $response = app()->makeWith(IResponse::class, ['content' => $controller->toResponse($content)]);
                 }
             }
-        } catch (HttpException $http_exception) {
-            if (config()->get('app.debug', false) === false && $http_exception->getCode() >= 500) {
-                $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse(['errCode' => 500, 'errMsg' => '程序错误', 'data' => '']), 'status' => 500]);
-            } else {
-                $response = $controller->dealWithError($http_exception);
+        } catch (\Exception $exception) {
+            $response = app()->make((config("app.exception_render", Handler::class) ?: Handler::class))->render($request, $exception);
+            if (!($response instanceof IResponse)) {
+                $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse($response)]);
             }
         } finally {
             if ($controller) {
