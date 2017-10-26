@@ -166,7 +166,7 @@ class HttpKernel implements IHttpKernel
             foreach ($params as $param) {
                 if (is_null($param->getType())) {
                     $p = $this->request->get($param->name);
-                    if (isset($p) && !$param->isDefaultValueAvailable()) {
+                    if (!isset($p) && !$param->isDefaultValueAvailable()) {
                         throw new HttpParamException($param->name);
                     }
                     $this->params[$param->name] = $this->request->get($param->name) ?: $param->getDefaultValue();
