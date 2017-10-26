@@ -115,7 +115,7 @@ class HttpKernel implements IHttpKernel
         $controller = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
-            $class = config("app.modules_namespace", "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
+            $class = config("app.modules_namespace", "Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
             $this->registerController($path_info, $class);
             $controller = $this->getController($path_info);
         } else if ($controller === false) {
@@ -165,7 +165,8 @@ class HttpKernel implements IHttpKernel
             $params = $reflection->getParameters();
             foreach ($params as $param) {
                 if (is_null($param->getType())) {
-                    if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()) {
+                    $p = $this->request->get($param->name);
+                    if (isset($p) && !$param->isDefaultValueAvailable()) {
                         throw new HttpParamException($param->name);
                     }
                     $this->params[$param->name] = $this->request->get($param->name) ?: $param->getDefaultValue();
@@ -187,12 +188,15 @@ class HttpKernel implements IHttpKernel
             //调试模式
             $session_id = $request->get(config('session.cookie'));
         }
+
         if ($request->header('csrf-token')) {
             $session_id = $request->header('csrf-token');
         }
 
-        Session::setId($session_id);
-        Session::start();
+        if ($session_id) {
+            Session::setId($session_id);
+            Session::start();
+        }
 
         $this->request = $request;
 
@@ -215,7 +219,7 @@ class HttpKernel implements IHttpKernel
                     $response = app()->makeWith(IResponse::class, ['content' => $controller->toResponse($content)]);
                 }
             }
-        } catch (\Exception $exception) {
+        } catch (\Exception | \EngineException $exception) {
             $response = app()->make((config("app.exception_render", Handler::class) ?: Handler::class))->render($request, $exception);
             if (!($response instanceof IResponse)) {
                 $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse($response)]);
@@ -224,8 +228,10 @@ class HttpKernel implements IHttpKernel
             if ($controller) {
                 $response->setContentType($controller->getContentType());
             }
-            Session::save();
-            Session::flush();
+            if ($session_id) {
+                Session::save();
+                Session::flush();
+            }
             return $response;
         }
     }

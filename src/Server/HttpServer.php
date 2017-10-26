@@ -98,7 +98,7 @@ class HttpServer implements IServer, IHttpServer
     protected function createServer(): \swoole_http_server
     {
         $swoole_server = new \swoole_http_server($this->defaultHost, $this->defaultPort);
-        $configure     = [
+        $configure = [
             'worker_num' => $this->workNum,
             'max_request' => $this->maxRequest,
             'max_conn' => $this->maxConn,
@@ -177,8 +177,10 @@ class HttpServer implements IServer, IHttpServer
         }
         $this->setGlobal($req);
         $this->application->instance('request', Request::createFromGlobals());
+        unset($req);
         $this->application->instance('response', $res);
         $this->application->instance(\Swoole\Http\Response::class, $res);
+
         $response = $this->application->handle($this->application->make('request'));
         $response->header("Server", $this->version());
         $response->send();
