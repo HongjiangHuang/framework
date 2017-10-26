@@ -30,6 +30,7 @@
     "illuminate/cache": "^5.4",
     "illuminate/events": "5.4.*",
     "illuminate/database": "5.4.*",
+    "illuminate/pagination": "^5.4",
     "symfony/console": "3.2.*",
     "symfony/http-foundation": "^3.2",
     "phpunit/phpunit": "^6.1",
