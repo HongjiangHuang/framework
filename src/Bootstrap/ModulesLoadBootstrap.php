@@ -35,7 +35,7 @@ class ModulesLoadBootstrap
 
         $modules_path = $application->modulesPath();
         dir_each($modules_path, function ($file) {
-            if ($file != "" && $file != "." && $file != "..") {
+            if ($file != "" && (strpos($file, ".") === false)) {
                 $this->readModule($file);
             }
         });
