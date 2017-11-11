@@ -22,6 +22,7 @@ use Illuminate\Support\ServiceProvider;
 use JYPHP\Core\Bootstrap\ConfigBootstrap;
 use JYPHP\Core\Bootstrap\EnvBootstrap;
 use JYPHP\Core\Bootstrap\FrameworkBootstrap;
+use JYPHP\Core\Bootstrap\ModulesLoadBootstrap;
 use JYPHP\Core\Console\ConsoleProvider;
 use JYPHP\Core\Http\Request;
 use JYPHP\Core\Interfaces\Application\IApplication;
@@ -53,7 +54,8 @@ class Application extends Container implements IApplication
     protected $bootstrap = [
         EnvBootstrap::class,
         ConfigBootstrap::class,
-        FrameworkBootstrap::class
+        FrameworkBootstrap::class,
+        ModulesLoadBootstrap::class
     ];
 
     protected $booted = false;
@@ -290,6 +292,16 @@ class Application extends Container implements IApplication
     public function appPath(): string
     {
         return $this->appPath ?: $this->basePath() . "/app";
+    }
+
+    /**
+     * 获得模块目录
+     * @return string
+     */
+    public function modulesPath(): string
+    {
+        $m = rtrim(str_replace("\\", "/", config("app.modules_namespace", "Modules\\")), "/");
+        return $this->appPath() . "/{$m}";
     }
 
     /**
