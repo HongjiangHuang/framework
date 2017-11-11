@@ -11,10 +11,11 @@
 namespace JYPHP\Core\Server\Console;
 
 use Illuminate\Session\SessionServiceProvider;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Cache;
 use JYPHP\Core\Console\Command;
 use JYPHP\Core\Http\HttpServiceProvider;
-use JYPHP\Core\Interfaces\Http\IHttpKernel;
+use JYPHP\Core\Interfaces\Application\IApplication;
 use JYPHP\Core\Interfaces\Server\IHttpServer;
 use Symfony\Component\Console\Input\InputArgument;
 
@@ -23,6 +24,8 @@ class HttpServerCommand extends Command
     protected $name = "server:http";
 
     protected $desc = "操作HTTP服务";
+
+    protected $files = [];
 
     public function configure()
     {
@@ -36,7 +39,7 @@ class HttpServerCommand extends Command
 
     public function handle()
     {
-        $operation  = $this->input->getArgument('operation');
+        $operation = $this->input->getArgument('operation');
         $operations = [
             'start',
             'restart',
@@ -66,8 +69,37 @@ class HttpServerCommand extends Command
 
     public function dev()
     {
-        ($this->app->make(IHttpServer::class))
-            ->run();
+        $server = $this->app->make(IHttpServer::class);
+        $server->init();
+        $process = new \swoole_process(function ($worker) use (&$server) {
+            foreach (config("redhot") as $dir) {
+                $this->read($dir);
+            }
+            while (true) {
+                clearstatcache();
+                sleep(2);
+                if ($this->inotify() === true) {
+                    $server->reload();
+                }
+            }
+        }, false, false);
+        $process->start();
+        $server->run();
+    }
+
+    public function inotify(): bool
+    {
+        $files = &$this->files;
+        foreach ($files as $key => $item) {
+            if (is_file($item['file'])) {
+                $mtime = stat($item['file'])['mtime'];
+                if ($mtime > $item['time']) {
+                    $files[$key]['time'] = $mtime;
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     public function restart()
@@ -77,8 +109,31 @@ class HttpServerCommand extends Command
         } catch (\Exception $exception) {
             echo $exception->getMessage();
         }
-        sleep(0.5);
+        sleep(1);
         $this->start();
+    }
+
+    /**
+     * @param $dir
+     */
+    public function read($dir)
+    {
+        dir_each($dir, function ($file) use ($dir) {
+            $files = [];
+            if ($file != "" && $file != "." && $file != "..") {
+                $file = $dir . "/" . $file;
+                if (is_file($file)) {
+                    $files[] = [
+                        'file' => $file,
+                        'time' => stat($file)['mtime']
+                    ];
+                } else if (is_dir($file)) {
+                    $this->read($file);
+                }
+            }
+            unset($dir);
+            $this->files = array_merge($this->files, $files);
+        });
     }
 
     public function kill()

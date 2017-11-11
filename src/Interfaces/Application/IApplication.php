@@ -55,6 +55,12 @@ interface IApplication
     public function logFile(): string;
 
     /**
+     * 模块目录
+     * @return string
+     */
+    public function modulesPath(): string;
+
+    /**
      * 资源目录
      * @return string
      */

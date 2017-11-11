@@ -31,9 +31,16 @@ class HttpKernel implements IHttpKernel
     protected static $controllers = [];
 
     /**
+     * 存储controller action filters
+     * @var array
+     */
+    protected static $filters = [];
+
+    /**
      * @var Request
      */
     protected $request;
+
 
     /**
      * @var array
@@ -72,8 +79,12 @@ class HttpKernel implements IHttpKernel
         if ($key === null) {
             return self::$controllers;
         }
-        if (Arr::exists(self::$controllers, $key)) {
-            return self::$controllers[$key] === null ? false : app()->make(self::$controllers[$key]);
+        try {
+            if (Arr::exists(self::$controllers, $key)) {
+                return self::$controllers[$key] === null ? false : app()->make(self::$controllers[$key]);
+            }
+        } catch (\Exception $exception) {
+            return null;
         }
         return null;
     }
@@ -135,6 +146,31 @@ class HttpKernel implements IHttpKernel
     }
 
     /**
+     * 获取
+     * @param $controller
+     * @param $action
+     * @param \ReflectionMethod $reflection
+     * @return array
+     */
+    public function getFilter(Controller $controller, string $action, \ReflectionMethod $reflection): array
+    {
+        $key = md5(get_class($controller) . $action);
+        if (empty(self::$filters[$key])) {
+            $annotation = new Annotation($reflection->getDocComment(), app());
+            $annotation->parser();
+            $filters = [];
+            foreach ($annotation->getFilter() as $filter => $params) {
+                if (FilterProvider::has($filter)) {
+                    foreach ($params as $param)
+                        $filters[] = $filter . ":" . $param;
+                }
+            }
+            self::$filters[$key] = $filters;
+        }
+        return self::$filters[$key];
+    }
+
+    /**
      * 开始处理
      * @return mixed
      */
@@ -145,17 +181,10 @@ class HttpKernel implements IHttpKernel
         if (!method_exists($controller, $action)) {
             $action = "missMethod";
         }
-        $reflection = new \ReflectionMethod($controller, $action);
-        $annotation = new Annotation($reflection->getDocComment(), app());
-        $annotation->parser();
+
         $pipeline = app()->make('pipeline');
-        $filters = [];
-        foreach ($annotation->getFilter() as $filter => $params) {
-            if (FilterProvider::has($filter)) {
-                foreach ($params as $param)
-                    $filters[] = $filter . ":" . $param;
-            }
-        }
+        $reflection = new \ReflectionMethod($controller, $action);
+        $filters = $this->getFilter($controller, $action, $reflection);
 
         //开始处理
         //向管道发送request对象

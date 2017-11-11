@@ -57,23 +57,23 @@ if (!function_exists('request')) {
  * Config manage class
  */
 if (!function_exists('config')) {
-    function config($key = null , $default = null)
+    function config($key = null, $default = null)
     {
         return $key === null ? app('config')
-                : ($default === null ? app('config')[$key]
-                : app('config')->get($key,$default));
+            : ($default === null ? app('config')[$key]
+                : app('config')->get($key, $default));
     }
 }
 
 
-if (! function_exists('session')) {
+if (!function_exists('session')) {
     /**
      * Get / set the specified session value.
      *
      * If an array is passed as the key, we will assume you want to set an array of values.
      *
-     * @param  array|string  $key
-     * @param  mixed  $default
+     * @param  array|string $key
+     * @param  mixed $default
      * @return mixed
      */
     function session($key = null, $default = null)
@@ -88,4 +88,25 @@ if (! function_exists('session')) {
 
         return app('session')->get($key, $default);
     }
+}
+
+if (!function_exists('dir_each')) {
+
+    /**
+     * 遍历目录
+     * @param string $dir 目录路径
+     * @param callable $func
+     * @throws Exception
+     */
+    function dir_each(string $dir, callable $func)
+    {
+        if (!is_dir($dir)) {
+            throw new \Exception("${dir} not is directory");
+        }
+        $res = opendir($dir);
+        while (($file = readdir($res)) !== false) {
+            call_user_func($func, $file);
+        }
+    }
+
 }

@@ -18,14 +18,5 @@ class FrameworkBootstrap
     public function bootstrap(IApplication $application)
     {
         Facade::setFacadeApplication($application);
-        $application->registerModules(config('modules'));
-    }
-
-    /**
-     * 初始化配置
-     */
-    public function initConfig()
-    {
-
     }
 }
