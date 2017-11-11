@@ -98,7 +98,7 @@ class HttpServer implements IServer, IHttpServer
     protected function createServer(): \swoole_http_server
     {
         $swoole_server = new \swoole_http_server($this->defaultHost, $this->defaultPort);
-        $configure     = [
+        $configure = [
             'worker_num' => $this->workNum,
             'max_request' => $this->maxRequest,
             'max_conn' => $this->maxConn,
@@ -147,6 +147,11 @@ class HttpServer implements IServer, IHttpServer
         $this->application = $application;
     }
 
+    public function __call($name, $arguments)
+    {
+        return $this->swooleServer->$name(...$arguments);
+    }
+
     public function daemonize()
     {
         $this->daemon = true;
@@ -154,10 +159,11 @@ class HttpServer implements IServer, IHttpServer
     }
 
     /**
-     * 运行服务器
+     * 初始化服务器
      * @param null $swoole_server
+     * @return $this
      */
-    public function run($swoole_server = null)
+    public function init($swoole_server = null)
     {
         if (empty($swoole_server) || (!$swoole_server instanceof \swoole_http_server)) {
             $swoole_server = $this->createServer();
@@ -166,7 +172,16 @@ class HttpServer implements IServer, IHttpServer
         $this->swooleServer->on('Request', [$this, 'onRequest']);
         $this->swooleServer->on('Close', [$this, 'onClose']);
         $this->swooleServer->on('Shutdown', [$this, 'onShutdown']);
+        $this->swooleServer->on('WorkerStart', [$this, 'onWorkerStart']);
         $this->swooleServer->on('Start', [$this, 'onStart']);
+        return $this;
+    }
+
+    /**
+     * 运行服务器
+     */
+    public function run()
+    {
         $this->swooleServer->start();
     }
 
@@ -177,8 +192,10 @@ class HttpServer implements IServer, IHttpServer
         }
         $this->setGlobal($req);
         $this->application->instance('request', Request::createFromGlobals());
+        unset($req);
         $this->application->instance('response', $res);
         $this->application->instance(\Swoole\Http\Response::class, $res);
+
         $response = $this->application->handle($this->application->make('request'));
         $response->header("Server", $this->version());
         $response->send();
@@ -194,6 +211,17 @@ class HttpServer implements IServer, IHttpServer
     {
         $this->maxRequest = $max;
         return $this;
+    }
+
+    public function onWorkerStart()
+    {
+        if (function_exists('opcache_reset')) {
+            opcache_reset();
+        }
+        if (function_exists('apc_clear_cache')) {
+            apc_clear_cache();
+        }
+        echo "clear cache ok \n";
     }
 
     public function onStart($server)

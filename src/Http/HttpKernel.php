@@ -31,9 +31,16 @@ class HttpKernel implements IHttpKernel
     protected static $controllers = [];
 
     /**
+     * 存储controller action filters
+     * @var array
+     */
+    protected static $filters = [];
+
+    /**
      * @var Request
      */
     protected $request;
+
 
     /**
      * @var array
@@ -72,8 +79,12 @@ class HttpKernel implements IHttpKernel
         if ($key === null) {
             return self::$controllers;
         }
-        if (Arr::exists(self::$controllers, $key)) {
-            return self::$controllers[$key] === null ? false : app()->make(self::$controllers[$key]);
+        try {
+            if (Arr::exists(self::$controllers, $key)) {
+                return self::$controllers[$key] === null ? false : app()->make(self::$controllers[$key]);
+            }
+        } catch (\Exception $exception) {
+            return null;
         }
         return null;
     }
@@ -115,7 +126,7 @@ class HttpKernel implements IHttpKernel
         $controller = $this->getController($path_info);
         if ($controller === null) {
             //如果为空则注册一遍控制器
-            $class = config("app.modules_namespace", "App\\Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
+            $class = config("app.modules_namespace", "Modules\\") . ucfirst($par_module) . "\\Controllers\\" . ucfirst($par_controller);
             $this->registerController($path_info, $class);
             $controller = $this->getController($path_info);
         } else if ($controller === false) {
@@ -135,6 +146,31 @@ class HttpKernel implements IHttpKernel
     }
 
     /**
+     * 获取
+     * @param $controller
+     * @param $action
+     * @param \ReflectionMethod $reflection
+     * @return array
+     */
+    public function getFilter(Controller $controller, string $action, \ReflectionMethod $reflection): array
+    {
+        $key = md5(get_class($controller) . $action);
+        if (empty(self::$filters[$key])) {
+            $annotation = new Annotation($reflection->getDocComment(), app());
+            $annotation->parser();
+            $filters = [];
+            foreach ($annotation->getFilter() as $filter => $params) {
+                if (FilterProvider::has($filter)) {
+                    foreach ($params as $param)
+                        $filters[] = $filter . ":" . $param;
+                }
+            }
+            self::$filters[$key] = $filters;
+        }
+        return self::$filters[$key];
+    }
+
+    /**
      * 开始处理
      * @return mixed
      */
@@ -145,17 +181,10 @@ class HttpKernel implements IHttpKernel
         if (!method_exists($controller, $action)) {
             $action = "missMethod";
         }
-        $reflection = new \ReflectionMethod($controller, $action);
-        $annotation = new Annotation($reflection->getDocComment(), app());
-        $annotation->parser();
+
         $pipeline = app()->make('pipeline');
-        $filters = [];
-        foreach ($annotation->getFilter() as $filter => $params) {
-            if (FilterProvider::has($filter)) {
-                foreach ($params as $param)
-                    $filters[] = $filter . ":" . $param;
-            }
-        }
+        $reflection = new \ReflectionMethod($controller, $action);
+        $filters = $this->getFilter($controller, $action, $reflection);
 
         //开始处理
         //向管道发送request对象
@@ -165,7 +194,8 @@ class HttpKernel implements IHttpKernel
             $params = $reflection->getParameters();
             foreach ($params as $param) {
                 if (is_null($param->getType())) {
-                    if (is_null($this->request->get($param->name)) && !$param->isDefaultValueAvailable()) {
+                    $p = $this->request->get($param->name);
+                    if (!isset($p) && !$param->isDefaultValueAvailable()) {
                         throw new HttpParamException($param->name);
                     }
                     $this->params[$param->name] = $this->request->get($param->name) ?: $param->getDefaultValue();
@@ -187,12 +217,15 @@ class HttpKernel implements IHttpKernel
             //调试模式
             $session_id = $request->get(config('session.cookie'));
         }
+
         if ($request->header('csrf-token')) {
             $session_id = $request->header('csrf-token');
         }
 
-        Session::setId($session_id);
-        Session::start();
+        if ($session_id) {
+            Session::setId($session_id);
+            Session::start();
+        }
 
         $this->request = $request;
 
@@ -215,7 +248,7 @@ class HttpKernel implements IHttpKernel
                     $response = app()->makeWith(IResponse::class, ['content' => $controller->toResponse($content)]);
                 }
             }
-        } catch (\Exception $exception) {
+        } catch (\Exception | \EngineException $exception) {
             $response = app()->make((config("app.exception_render", Handler::class) ?: Handler::class))->render($request, $exception);
             if (!($response instanceof IResponse)) {
                 $response = app()->makeWith(IResponse::class, ["content" => $controller->toResponse($response)]);
@@ -224,8 +257,10 @@ class HttpKernel implements IHttpKernel
             if ($controller) {
                 $response->setContentType($controller->getContentType());
             }
-            Session::save();
-            Session::flush();
+            if ($session_id) {
+                Session::save();
+                Session::flush();
+            }
             return $response;
         }
     }

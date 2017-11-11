@@ -18,6 +18,5 @@ class FrameworkBootstrap
     public function bootstrap(IApplication $application)
     {
         Facade::setFacadeApplication($application);
-        $application->registerModules(config('modules'));
     }
 }

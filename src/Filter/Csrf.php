@@ -18,8 +18,10 @@ final class Csrf extends Filter
 
     public function handle(Request $request, \Closure $next, ...$params)
     {
-        app()->make("response")->header("Access-Control-Allow-Origin", "*");
-        app()->make("response")->header("Access-Control-Allow-Methods", "POST, GET, OPTIONS,DELETE,PUT");
+        if (in_array($_SERVER["HTTP_ORIGIN"], config("api.http_origin", []))) {
+            app()->make("response")->header("Access-Control-Allow-Origin", $_SERVER["HTTP_ORIGIN"]);
+            app()->make("response")->header("Access-Control-Allow-Methods", "POST,GET,OPTIONS,DELETE,PUT");
+        }
         return $next($request);
     }
 }
